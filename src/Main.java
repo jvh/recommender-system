@@ -8,7 +8,9 @@ public class Main {
     public static void main(String[] args) {
         UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering();
 
+        Main m = new Main();
 
+        m.hashWithinHashTest();
 
     }
 
@@ -16,16 +18,40 @@ public class Main {
         HashMap<Integer, HashMap<Integer, Integer>> hm = new HashMap<Integer, HashMap<Integer, Integer>>();
         HashMap<Integer, Integer> hm2 = new HashMap<Integer, Integer>();
 
+        //user 1 ratings
         hm2.put(2, 5);
         hm2.put(3, 7);
 
-        hm2.clear();
+        HashMap<Integer, Integer> hm3 = new HashMap<Integer, Integer>();
 
-        hm2.put(3, 8);
 
         hm.put(1, hm2);
-        hm.put(2, hm2);
+        //user 2 ratings
+        hm3.put(3, 8);
+        hm.put(2, hm3);
 
-        System.out.println(hm.get(2));
+            HashMap<Integer, Integer> hmtest = new HashMap<Integer, Integer>();
+
+            hmtest.put(1, 2);
+            hm.put(5, hmtest);
+
+        hmtest = new HashMap<Integer, Integer>();
+
+        hmtest.put(2, 9);
+
+        hm.put(5, hmtest);
+
+
+        hmtest = new HashMap<Integer, Integer>();
+
+            hmtest.put(2, 3);
+
+            hm.put(6, hmtest);
+
+
+        for(int i = 0; i < hm.entrySet().size(); i++) {
+            System.out.println(hm.get(i));
+
+        }
     }
 }
