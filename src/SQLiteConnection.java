@@ -18,24 +18,42 @@ public class SQLiteConnection {
         }
     }
 
-    public void getAmountOfRecords(String tableName, int amount) {
+    public HashMap<Integer, HashMap<Integer,Integer>> getAmountOfRecords(String tableName, int amount) {
         HashMap<Integer, HashMap<Integer, Integer>> userIdMap = new HashMap<>();
-        HashMap<Integer, Integer> pairRatingsMap = new HashMap<>();
         String query = "SELECT * FROM" + " " + tableName + " LIMIT " + amount;
         try {
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);
 
             ResultSet resultSet = statement.executeQuery(query);
+            int currentUserId = 0;
+
             while(resultSet.next()) {
-                System.out.println(resultSet.getInt(1));
-                System.out.println(resultSet.getInt(2));
-                System.out.println(resultSet.getInt(3));
+
+                HashMap<Integer, Integer> pairRatingsMap;
+                int foundUserId = resultSet.getInt(1);
+
+                if(foundUserId != currentUserId) {
+                    currentUserId = foundUserId;
+                    pairRatingsMap = new HashMap<>();
+                    userIdMap.put(foundUserId, pairRatingsMap);
+
+                } else {
+                    pairRatingsMap = userIdMap.get(foundUserId);
+                }
+                pairRatingsMap.put(resultSet.getInt(2), resultSet.getInt(3));
+
             }
+
+//            System.out.println(userIdMap.entrySet().size());
+//            for(int i = 1 ; i <= userIdMap.entrySet().size(); i++) {
+//                System.out.println(userIdMap.get(i));
+//            }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return userIdMap;
     }
 
     public void closeConnection() {
@@ -51,7 +69,7 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
-        sqLiteConnection.getAmountOfRecords("minimalTestSet", 15);
+        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
         sqLiteConnection.closeConnection();
 //        connect();
 //        getAmountOfRecords("minimalTestSet", 15);
