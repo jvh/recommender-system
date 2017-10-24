@@ -20,12 +20,21 @@ public class SQLiteConnection {
 
     public HashMap<Integer, HashMap<Integer,Integer>> getAmountOfRecords(String tableName, int amount) {
         HashMap<Integer, HashMap<Integer, Integer>> userIdMap = new HashMap<>();
-        String query = "SELECT * FROM" + " " + tableName + " LIMIT " + amount;
         try {
-            Statement statement = connection.createStatement();
-            statement.setQueryTimeout(30);
 
-            ResultSet resultSet = statement.executeQuery(query);
+            int userid1 = 232;
+            int userid2 = 543;
+            String query2 = "SELECT * FROM" + " " + tableName + " WHERE itemID IN (434,879);
+
+
+//            String query = "SELECT * FROM" + " " + tableName + " LIMIT " + amount;
+
+            Statement statement = connection.createStatement();
+//            statement.setQueryTimeout(30);
+
+//            ResultSet resultSet = preparedStatement.executeQuery();
+//            System.out.println(resultSet);
+            ResultSet resultSet = statement.executeQuery(query2);
             int currentUserId = 0;
 
             while(resultSet.next()) {
@@ -69,10 +78,12 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
-        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
+//        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
+        System.out.println(sqLiteConnection.getAmountOfRecords("trainingSet", 100));
         sqLiteConnection.closeConnection();
 //        connect();
 //        getAmountOfRecords("minimalTestSet", 15);
 //        closeConnection();
     }
+
 }
