@@ -18,23 +18,88 @@ public class SQLiteConnection {
         }
     }
 
+
+    public double getUserAverage(String tableName, int userID) {
+        double average = 0;
+        int resultCount = 0;
+        try {
+            String query = "SELECT realRating FROM " + tableName + " WHERE userID=" + userID + " AND userID <> 0";
+            Statement statement = connection.createStatement();
+
+            ResultSet resultSet = statement.executeQuery(query);
+
+
+            while(resultSet.next()) {
+                average += resultSet.getDouble(1);
+                resultCount++;
+            }
+            average = average / resultCount;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return average;
+    }
+
+
+
+    public void intersectTest() {
+
+        try {
+
+            /*
+            SELECT si1.*
+FROM sold_items AS si1
+JOIN (SELECT member_id
+      FROM sold_items
+      GROUP BY member_id
+      HAVING SUM(amount) > 50) AS si2
+ON si1.member_id = si2.member_id
+             */
+
+            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (49,124) GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (49,124)";
+
+//            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (3,49) GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (3,49)";
+//            String query_working = "SELECT itemID, realRating FROM trainingSet WHERE userID in (3,49) GROUP BY itemID HAVING ( COUNT(itemID) > 1)";
+
+//            String query = "SELECT * FROM trainingSet WHERE itemID in (select itemID from trainingSet GROUP BY itemID HAVING itemID IN (647,712) AND count(*) > 1)";
+
+//            String query = "SELECT itemID FROM trainingSet WHERE userID IN (647,712) AND itemID IN (SELECT itemID FROM trainingSet GROUP BY itemID HAVING COUNT(userID) > 2)";
+
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while(resultSet.next()) {
+//                System.out.println(resultSet.getInt(1) + " " + resultSet.getInt(2));
+                System.out.println(resultSet.getInt(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3));
+
+//                System.out.println(resultSet.getInt(1));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
     public HashMap<Integer, HashMap<Integer,Integer>> getAmountOfRecords(String tableName, int amount) {
         HashMap<Integer, HashMap<Integer, Integer>> userIdMap = new HashMap<>();
         try {
 
             int userid1 = 232;
             int userid2 = 543;
-            String query2 = "SELECT * FROM" + " " + tableName + " WHERE itemID IN (434,879);
+//            String query2 = "SELECT * FROM" + " " + tableName + " WHERE itemID IN (434,879);
 
 
-//            String query = "SELECT * FROM" + " " + tableName + " LIMIT " + amount;
+            String query = "SELECT * FROM" + " " + tableName + " LIMIT " + amount;
 
             Statement statement = connection.createStatement();
 //            statement.setQueryTimeout(30);
 
 //            ResultSet resultSet = preparedStatement.executeQuery();
 //            System.out.println(resultSet);
-            ResultSet resultSet = statement.executeQuery(query2);
+            ResultSet resultSet = statement.executeQuery(query);
             int currentUserId = 0;
 
             while(resultSet.next()) {
@@ -78,8 +143,11 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
+        sqLiteConnection.intersectTest();
 //        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
-        System.out.println(sqLiteConnection.getAmountOfRecords("trainingSet", 100));
+//        System.out.println(sqLiteConnection.getAmountOfRecords("trainingSet", 100));
+//        System.out.println(sqLiteConnection.getUserAverage("trainingSet", 1));
+//        )sqLiteConnection.getUserId("trainingSet", 1);
         sqLiteConnection.closeConnection();
 //        connect();
 //        getAmountOfRecords("minimalTestSet", 15);
