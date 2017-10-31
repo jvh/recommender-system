@@ -17,9 +17,9 @@ public class UserBasedCollabFiltering {
         double userBAverage;
         HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>();
 
-        for (int i = 1; i < 2; ++i) {
+        for (int i = 1; i < 100000; ++i) {
             userAAverage = sql.getUserAverage(i);
-            for (int y = 1; y < 1000; ++y) {
+            for (int y = 1; y < 100000; ++y) {
                 userBAverage = sql.getUserAverage(y);
 
                 if (i == y) {
@@ -58,20 +58,21 @@ public class UserBasedCollabFiltering {
                         double similarity = (topLine / bottomLine);
 
                         //Batch processing (insertion)
-                        if (similaritiesToAdd.entrySet().size() <= 3) {
+                        if (similaritiesToAdd.entrySet().size() <= 100000) {
                             similaritiesToAdd.put(i + "," + y, similarity);
-                            System.out.println("*********************ADDING************************");
+//                            System.out.println("*********************ADDING************************");
                         } else {
                             for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
-                                double userA = Double.parseDouble(entry.getKey().split(",")[0]);
-                                double userB = Double.parseDouble(entry.getKey().split(",")[1]);
+                                int userA = Integer.parseInt(entry.getKey().split(",")[0]);
+                                int userB = Integer.parseInt(entry.getKey().split(",")[1]);
                                 double similarityRating = entry.getValue();
 
-                                sql.insertSimilarityValue(i, y, similarityRating);
+                                sql.insertSimilarityValue(userA, userB, similarityRating);
 
 
-                                System.out.println("*********************DONE*************************");
+
                             }
+                            System.out.println("*********************DONE*************************");
                             return;
                         }
                     }
