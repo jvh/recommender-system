@@ -60,6 +60,7 @@ public class UserBasedCollabFiltering {
                     HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>();
                     if(similaritiesToAdd.entrySet().size() <= 10) {
                         similaritiesToAdd.put(i + "," + y, similarity);
+                        System.out.println("*********************ADDING************************")
                     } else {
                         for(HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
                             double userA = Double.parseDouble(entry.getKey().split(",")[0]);
@@ -68,6 +69,8 @@ public class UserBasedCollabFiltering {
 
                             sql.insertSimilarityValue(i, y, similarityRating);
                             sql.closeConnection();
+
+                            System.out.println("*********************DONE*************************")
                             break;
                         }
                     }
