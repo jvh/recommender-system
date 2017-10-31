@@ -16,14 +16,12 @@ public class UserBasedCollabFiltering {
         double userAAverage;
         double userBAverage;
 
-//        for(int i = 0; i < 9; ++i) {
-            int i = 49;
+        for (int i = 0; i < 1000; ++i) {
             userAAverage = sql.getUserAverage(i);
-//            for(int y = 0; y < 9; ++y) {
-                int y =124;
+            for (int y = 0; y < 1000; ++y) {
                 userBAverage = sql.getUserAverage(y);
 
-                if(i == y) {
+                if (i == y) {
 //                    sql.addSimilarity(i, y, 0);
                 } else {
                     //Finds the items which both users have rated and the rating associated with them for both users. Returns a hashmap
@@ -37,7 +35,7 @@ public class UserBasedCollabFiltering {
                     double userBCalc = 0;
 
 
-                    for(HashMap.Entry<Integer, String> entry: similarItemsRated.entrySet()) {
+                    for (HashMap.Entry<Integer, String> entry : similarItemsRated.entrySet()) {
                         int itemID = entry.getKey();
                         //Ratings returned for both users for the same item
                         double ratingA = Double.parseDouble(entry.getValue().split(",")[0]);
@@ -58,12 +56,23 @@ public class UserBasedCollabFiltering {
 
                     double similarity = topLine / bottomLine;
 
-                    System.out.println(similarity);
-                    sql.insertSimilarityValue(i, y, similarity);
-                    sql.closeConnection();
+                    //Batch processing (insertion)
+                    HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>();
+                    if(similaritiesToAdd.entrySet().size() <= 10) {
+                        similaritiesToAdd.put(i + "," + y, similarity);
+                    } else {
+                        for(HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
+                            double userA = Double.parseDouble(entry.getKey().split(",")[0]);
+                            double userB = Double.parseDouble(entry.getKey().split(",")[1]);
+                            double similarityRating = entry.getValue();
+
+                            sql.insertSimilarityValue(i, y, similarityRating);
+                            sql.closeConnection();
+                            break;
+                        }
+                    }
                 }
             }
-
-
-
+        }
+    }
 }
