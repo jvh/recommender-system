@@ -19,6 +19,16 @@ public class SQLiteConnection {
         }
     }
 
+    public void insertSimilarityValue(int userA, int userB, double similarityValue) {
+        String insert = "INSERT INTO similaritySet VALUES (" + userA + "," + userB + "," + similarityValue + ")";
+        try {
+            Statement insertStatement = connection.createStatement();
+            insertStatement.executeUpdate(insert);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public double getUserAverage(int userID) {
         double average = 0;
@@ -149,7 +159,8 @@ public class SQLiteConnection {
         sqLiteConnection.connect();
 //        sqLiteConnection.getUserAverage(2);
 //        sqLiteConnection.getUserAverage("averageSet", 1);
-        sqLiteConnection.similarityValues(49, 124);
+//        sqLiteConnection.similarityValues(49, 124);
+        sqLiteConnection.insertSimilarityValue(1,2, 343.432);
 //        sqLiteConnection.intersectTest();
 
 //        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
