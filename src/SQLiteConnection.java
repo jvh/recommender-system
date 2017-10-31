@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SQLiteConnection {
@@ -19,33 +20,36 @@ public class SQLiteConnection {
     }
 
 
-    public double getUserAverage(String tableName, int userID) {
+    public double getUserAverage(int userID) {
         double average = 0;
         int resultCount = 0;
         try {
-            String query = "SELECT averageValue FROM " + tableName + " WHERE userID=" + userID + " AND userID <> 0";
+            String query = "SELECT averageValue FROM averageSet WHERE userID=" + userID + " AND userID <> 0";
             Statement statement = connection.createStatement();
-
-//            boolean empty = true;
-//            while(resultSet.next() ) {
-//                // ResultSet processing here
-//                empty = false;
-//            }
-//
-//            if( empty ) {
-//                // Empty result set
-//            }
-
             ResultSet resultSet = statement.executeQuery(query);
-            System.out.println(resultSet);
-
-
-            while(resultSet.next()) {
+            boolean empty = true;
+            while(resultSet.next() ) {
                 average += resultSet.getDouble(1);
                 resultCount++;
+                empty = false;
             }
-            average = average / resultCount;
-            System.out.println("Average: " + average);
+//
+            if(empty) {
+                String queryOther = "SELECT realRating FROM trainingSet WHERE userID=" + userID + " AND userID <> 0";
+                Statement statementOther = connection.createStatement();
+                ResultSet resultSetOther = statementOther.executeQuery(queryOther);
+                while(resultSetOther.next()) {
+                    average += resultSetOther.getDouble(1);
+                    resultCount++;
+                }
+                average = average / resultCount;
+                String insert = "INSERT INTO averageSet VALUES (" + userID + "," + average + ")";
+                Statement insertStatement = connection.createStatement();
+                insertStatement.executeUpdate(insert);
+
+            }
+            System.out.println(average);
+            return average;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -55,7 +59,8 @@ public class SQLiteConnection {
 
 
 
-    public void similarityValues(int userA, int userB) {
+    public ArrayList<String> similarityValues(int userA, int userB) {
+        ArrayList<String> resultValues = new ArrayList<>();
 
         try {
 
@@ -72,17 +77,15 @@ public class SQLiteConnection {
             ResultSet resultSet = statement.executeQuery(query);
 
             while(resultSet.next()) {
-//                System.out.println(resultSet.getInt(1) + " " + resultSet.getInt(2));
-                System.out.println(resultSet.getInt(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3));
 
-//                System.out.println(resultSet.getInt(1));
+                String result = resultSet.getInt(2) + " " + resultSet.getInt(1) + " " + resultSet.getInt(3);
+                resultValues.add(result);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-
+        return resultValues;
     }
 
     public HashMap<Integer, HashMap<Integer,Integer>> getAmountOfRecords(String tableName, int amount) {
@@ -145,8 +148,9 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
+        sqLiteConnection.getUserAverage(2);
 //        sqLiteConnection.getUserAverage("averageSet", 1);
-        sqLiteConnection.similarityValues(49, 124);
+//        sqLiteConnection.similarityValues(49, 124);
 //        sqLiteConnection.intersectTest();
 
 //        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
