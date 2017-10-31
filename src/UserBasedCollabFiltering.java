@@ -52,7 +52,7 @@ public class UserBasedCollabFiltering {
                     }
 
                     double firstSqrRt = Math.sqrt(Math.pow(userACalc, 2));
-                    double seconddSqrRt = Math.sqrt(Math.pow(userBCalc, 2));
+                    double secondSqrRt = Math.sqrt(Math.pow(userBCalc, 2));
 
                     double bottomLine = firstSqrRt * secondSqrRt;
 
