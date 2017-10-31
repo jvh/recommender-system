@@ -7,10 +7,11 @@ public class Main {
 
     public static void main(String[] args) {
         UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering();
+        ubcf.simuilarityMeasure();
 
-        Main m = new Main();
+//        Main m = new Main();
 
-        m.hashWithinHashTest();
+//        m.hashWithinHashTest();
 
     }
 

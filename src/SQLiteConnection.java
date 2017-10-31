@@ -58,7 +58,7 @@ public class SQLiteConnection {
                 insertStatement.executeUpdate(insert);
 
             }
-            System.out.println(average);
+//            System.out.println(average);
             return average;
 
         } catch (SQLException e) {
@@ -93,7 +93,7 @@ public class SQLiteConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println(resultMap);
+//        System.out.println(resultMap);
         return resultMap;
     }
 

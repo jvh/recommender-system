@@ -8,17 +8,19 @@ public class UserBasedCollabFiltering {
 
     SQLiteConnection sql = new SQLiteConnection();
 
+
     //Works out the similarities between the users
     public void simuilarityMeasure() {
+        sql.connect();
         //Stores the average for both of the users
         double userAAverage;
         double userBAverage;
 
-        for(int i = 0; i < 9; ++i) {
-            i = 49;
+//        for(int i = 0; i < 9; ++i) {
+            int i = 49;
             userAAverage = sql.getUserAverage(i);
-            for(int y = 0; y < 9; ++y) {
-                y =124;
+//            for(int y = 0; y < 9; ++y) {
+                int y =124;
                 userBAverage = sql.getUserAverage(y);
 
                 if(i == y) {
@@ -38,8 +40,8 @@ public class UserBasedCollabFiltering {
                     for(HashMap.Entry<Integer, String> entry: similarItemsRated.entrySet()) {
                         int itemID = entry.getKey();
                         //Ratings returned for both users for the same item
-                        int ratingA = Integer.parseInt(entry.getValue().split(" ")[0]);
-                        int ratingB = Integer.parseInt(entry.getValue().split(" ")[1]);
+                        double ratingA = Double.parseDouble(entry.getValue().split(",")[0]);
+                        double ratingB = Double.parseDouble(entry.getValue().split(",")[1]);
 
                         double first = ratingA - userAAverage;
                         double second = ratingB - userBAverage;
@@ -56,11 +58,12 @@ public class UserBasedCollabFiltering {
 
                     double similarity = topLine / bottomLine;
 
+                    System.out.println(similarity);
                     sql.insertSimilarityValue(i, y, similarity);
+                    sql.closeConnection();
                 }
             }
-        }
-    }
+
 
 
 }
