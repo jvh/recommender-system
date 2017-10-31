@@ -15,10 +15,11 @@ public class UserBasedCollabFiltering {
         //Stores the average for both of the users
         double userAAverage;
         double userBAverage;
+        HashMap<String, Float> similaritiesToAdd = new HashMap<String, Float>();
 
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 1; i < 2; ++i) {
             userAAverage = sql.getUserAverage(i);
-            for (int y = 0; y < 1000; ++y) {
+            for (int y = 1; y < 1000; ++y) {
                 userBAverage = sql.getUserAverage(y);
 
                 if (i == y) {
@@ -34,48 +35,50 @@ public class UserBasedCollabFiltering {
                     double userACalc = 0;
                     double userBCalc = 0;
 
+                    if (similarItemsRated.entrySet().size() > 0) {
+                        for (HashMap.Entry<Integer, String> entry : similarItemsRated.entrySet()) {
+                            int itemID = entry.getKey();
+                            //Ratings returned for both users for the same item
+                            double ratingA = Double.parseDouble(entry.getValue().split(",")[0]);
+                            double ratingB = Double.parseDouble(entry.getValue().split(",")[1]);
 
-                    for (HashMap.Entry<Integer, String> entry : similarItemsRated.entrySet()) {
-                        int itemID = entry.getKey();
-                        //Ratings returned for both users for the same item
-                        double ratingA = Double.parseDouble(entry.getValue().split(",")[0]);
-                        double ratingB = Double.parseDouble(entry.getValue().split(",")[1]);
+                            double first = ratingA - userAAverage;
+                            double second = ratingB - userBAverage;
 
-                        double first = ratingA - userAAverage;
-                        double second = ratingB - userBAverage;
+                            topLine = topLine + (first * second);
+                            userACalc = userACalc + first;
+                            userBCalc = userBCalc + second;
+                        }
 
-                        topLine = topLine + (first * second);
-                        userACalc = userACalc + first;
-                        userBCalc = userBCalc + second;
-                    }
+                        double firstSqrRt = Math.sqrt(Math.pow(userACalc, 2));
+                        double secondSqrRt = Math.sqrt(Math.pow(userBCalc, 2));
 
-                    double firstSqrRt = Math.sqrt(Math.pow(userACalc, 2));
-                    double secondSqrRt = Math.sqrt(Math.pow(userBCalc, 2));
+                        double bottomLine = firstSqrRt * secondSqrRt;
 
-                    double bottomLine = firstSqrRt * secondSqrRt;
+                        float similarity = (float) (topLine / bottomLine);
 
-                    double similarity = topLine / bottomLine;
+                        //Batch processing (insertion)
+                        if (similaritiesToAdd.entrySet().size() <= 3) {
+                            similaritiesToAdd.put(i + "," + y, similarity);
+                            System.out.println("*********************ADDING************************");
+                        } else {
+                            for (HashMap.Entry<String, Float> entry : similaritiesToAdd.entrySet()) {
+                                double userA = Double.parseDouble(entry.getKey().split(",")[0]);
+                                double userB = Double.parseDouble(entry.getKey().split(",")[1]);
+                                float similarityRating = entry.getValue();
 
-                    //Batch processing (insertion)
-                    HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>();
-                    if(similaritiesToAdd.entrySet().size() <= 10) {
-                        similaritiesToAdd.put(i + "," + y, similarity);
-                        System.out.println("*********************ADDING************************")
-                    } else {
-                        for(HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
-                            double userA = Double.parseDouble(entry.getKey().split(",")[0]);
-                            double userB = Double.parseDouble(entry.getKey().split(",")[1]);
-                            double similarityRating = entry.getValue();
+                                sql.insertSimilarityValue(i, y, similarityRating);
 
-                            sql.insertSimilarityValue(i, y, similarityRating);
-                            sql.closeConnection();
 
-                            System.out.println("*********************DONE*************************")
-                            break;
+                                System.out.println("*********************DONE*************************");
+                                return;
+                            }
                         }
                     }
                 }
             }
         }
+
     }
+
 }

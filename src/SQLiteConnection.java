@@ -75,6 +75,7 @@ public class SQLiteConnection {
         try {
 
             String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID";
+//            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID BETWEEN 1 AND 125 GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID BETWEEN 1 AND 125 ORDER BY itemID";
 
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
@@ -159,8 +160,8 @@ public class SQLiteConnection {
         sqLiteConnection.connect();
 //        sqLiteConnection.getUserAverage(2);
 //        sqLiteConnection.getUserAverage("averageSet", 1);
-//        sqLiteConnection.similarityValues(49, 124);
-        sqLiteConnection.insertSimilarityValue(1,2, 343.432);
+        sqLiteConnection.similarityValues(49, 124);
+//        sqLiteConnection.insertSimilarityValue(1,2, 343.432);
 //        sqLiteConnection.intersectTest();
 
 //        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
