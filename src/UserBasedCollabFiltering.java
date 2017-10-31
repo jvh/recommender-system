@@ -52,9 +52,9 @@ public class UserBasedCollabFiltering {
                     }
 
                     double firstSqrRt = Math.sqrt(Math.pow(userACalc, 2));
-                    double seocndSqrRt = Math.sqrt(Math.pow(userBCalc, 2));
+                    double seconddSqrRt = Math.sqrt(Math.pow(userBCalc, 2));
 
-                    double bottomLine = firstSqrRt * seocndSqrRt;
+                    double bottomLine = firstSqrRt * secondSqrRt;
 
                     double similarity = topLine / bottomLine;
 
