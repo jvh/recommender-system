@@ -59,33 +59,32 @@ public class SQLiteConnection {
 
 
 
-    public ArrayList<String> similarityValues(int userA, int userB) {
-        ArrayList<String> resultValues = new ArrayList<>();
+    public HashMap<Integer, String> similarityValues(int userA, int userB) {
+        HashMap<Integer, String> resultMap = new HashMap<>();
 
         try {
 
-            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ")";
-
-//            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (3,49) GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (3,49)";
-//            String query_working = "SELECT itemID, realRating FROM trainingSet WHERE userID in (3,49) GROUP BY itemID HAVING ( COUNT(itemID) > 1)";
-
-//            String query = "SELECT * FROM trainingSet WHERE itemID in (select itemID from trainingSet GROUP BY itemID HAVING itemID IN (647,712) AND count(*) > 1)";
-
-//            String query = "SELECT itemID FROM trainingSet WHERE userID IN (647,712) AND itemID IN (SELECT itemID FROM trainingSet GROUP BY itemID HAVING COUNT(userID) > 2)";
+            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID";
 
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
             while(resultSet.next()) {
-
-                String result = resultSet.getInt(2) + " " + resultSet.getInt(1) + " " + resultSet.getInt(3);
-                resultValues.add(result);
+                int itemID = resultSet.getInt(2);
+                if(!resultMap.containsKey(itemID)) {
+                    double valueA = resultSet.getInt(3);
+                    resultSet.next();
+                    double valueB = resultSet.getInt(3);
+                    String result = valueA + "," + valueB;
+                    resultMap.put(itemID, result);
+                }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return resultValues;
+        System.out.println(resultMap);
+        return resultMap;
     }
 
     public HashMap<Integer, HashMap<Integer,Integer>> getAmountOfRecords(String tableName, int amount) {
@@ -148,9 +147,9 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
-        sqLiteConnection.getUserAverage(2);
+//        sqLiteConnection.getUserAverage(2);
 //        sqLiteConnection.getUserAverage("averageSet", 1);
-//        sqLiteConnection.similarityValues(49, 124);
+        sqLiteConnection.similarityValues(49, 124);
 //        sqLiteConnection.intersectTest();
 
 //        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
