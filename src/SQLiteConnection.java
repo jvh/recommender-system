@@ -23,10 +23,21 @@ public class SQLiteConnection {
         double average = 0;
         int resultCount = 0;
         try {
-            String query = "SELECT realRating FROM " + tableName + " WHERE userID=" + userID + " AND userID <> 0";
+            String query = "SELECT averageValue FROM " + tableName + " WHERE userID=" + userID + " AND userID <> 0";
             Statement statement = connection.createStatement();
 
+//            boolean empty = true;
+//            while(resultSet.next() ) {
+//                // ResultSet processing here
+//                empty = false;
+//            }
+//
+//            if( empty ) {
+//                // Empty result set
+//            }
+
             ResultSet resultSet = statement.executeQuery(query);
+            System.out.println(resultSet);
 
 
             while(resultSet.next()) {
@@ -34,6 +45,7 @@ public class SQLiteConnection {
                 resultCount++;
             }
             average = average / resultCount;
+            System.out.println("Average: " + average);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -43,21 +55,11 @@ public class SQLiteConnection {
 
 
 
-    public void intersectTest() {
+    public void similarityValues(int userA, int userB) {
 
         try {
 
-            /*
-            SELECT si1.*
-FROM sold_items AS si1
-JOIN (SELECT member_id
-      FROM sold_items
-      GROUP BY member_id
-      HAVING SUM(amount) > 50) AS si2
-ON si1.member_id = si2.member_id
-             */
-
-            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (49,124) GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (49,124)";
+            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ")";
 
 //            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (3,49) GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (3,49)";
 //            String query_working = "SELECT itemID, realRating FROM trainingSet WHERE userID in (3,49) GROUP BY itemID HAVING ( COUNT(itemID) > 1)";
@@ -143,7 +145,10 @@ ON si1.member_id = si2.member_id
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
-        sqLiteConnection.intersectTest();
+//        sqLiteConnection.getUserAverage("averageSet", 1);
+        sqLiteConnection.similarityValues(49, 124);
+//        sqLiteConnection.intersectTest();
+
 //        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
 //        System.out.println(sqLiteConnection.getAmountOfRecords("trainingSet", 100));
 //        System.out.println(sqLiteConnection.getUserAverage("trainingSet", 1));
