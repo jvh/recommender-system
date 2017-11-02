@@ -23,7 +23,7 @@ public class UserBasedCollabFiltering {
                 userBAverage = sql.getUserAverage(y);
 
                 if (i == y) {
-                    similaritiesToAdd.put(i + "," + y + "0.0", 0.0);
+                    similaritiesToAdd.put(i + "," + y + 0, 0.0);
                 } else {
                     //Finds the items which both users have rated and the rating associated with them for both users. Returns a hashmap
                     HashMap<Integer, String> similarItemsRated = sql.similarityValues(i, y);
@@ -53,28 +53,36 @@ public class UserBasedCollabFiltering {
 
                         double similarity = (topLine / bottomLine);
 
-                        //Batch processing (insertion)
-                        if (similaritiesToAdd.entrySet().size() <= 1000 && i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
-                            similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
-//                            System.out.println("*********************ADDING************************");
-                        } else {
-                            for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
-                                int userA = Integer.parseInt(entry.getKey().split(",")[0]);
-                                int userB = Integer.parseInt(entry.getKey().split(",")[1]);
-                                int similarItems = Integer.parseInt(entry.getKey().split(",")[2]);
-                                double similarityRating = entry.getValue();
 
-                                sql.insertSimilarityValue(userA, userB, similarityRating, similarItems);
-                            }
-                            System.out.println("*********************DONE STACK*************************");
-                            if(i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
-                                similarityMeasure(i, y);
-                            }
+                    } else {
+                        similaritiesToAdd.put(i + "," + y + "," + 0, 0.0);
+                    }
+
+                    //Batch processing (insertion)
+                    if (similaritiesToAdd.entrySet().size() <= 1000 && i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
+                        similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
+                        System.out.println(similaritiesToAdd.size());
+//                            System.out.println("*********************ADDING************************");
+                    } else {
+                        System.out.println(similaritiesToAdd.size());
+                        for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
+                            int userA = Integer.parseInt(entry.getKey().split(",")[0]);
+                            int userB = Integer.parseInt(entry.getKey().split(",")[1]);
+                            int similarItems = Integer.parseInt(entry.getKey().split(",")[2]);
+                            double similarityRating = entry.getValue();
+
+                            sql.insertSimilarityValue(userA, userB, similarityRating, similarItems);
+                        }
+                        System.out.println("*********************DONE STACK*************************");
+                        if(i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
+                            System.out.println("recurse");
+                            similarityMeasure(i, y);
+                        } else {
+                            System.out.println("FINISHED");
                             return;
                         }
-                    } else {
-                        similaritiesToAdd.put(i + "," + y + "," + "0.0", 0.0);
                     }
+
                 }
             }
         }
