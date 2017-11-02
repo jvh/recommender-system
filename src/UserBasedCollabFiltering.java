@@ -45,15 +45,11 @@ public class UserBasedCollabFiltering {
                             double first = ratingA - userAAverage;
                             double second = ratingB - userBAverage;
 
-                            topLine = topLine + (first * second);
-                            userACalc = userACalc + first;
-                            userBCalc = userBCalc + second;
+                            topLine += (first * second);
+                            userACalc += Math.pow(first, 2);
+                            userBCalc += Math.pow(second, 2);
                         }
-
-                        double firstSqrRt = Math.sqrt(Math.pow(userACalc, 2));
-                        double secondSqrRt = Math.sqrt(Math.pow(userBCalc, 2));
-
-                        double bottomLine = firstSqrRt * secondSqrRt;
+                        double bottomLine = Math.sqrt(userACalc) * Math.sqrt(userBCalc);
 
                         double similarity = (topLine / bottomLine);
 
