@@ -7,23 +7,23 @@ import java.util.HashMap;
 public class UserBasedCollabFiltering {
 
     SQLiteConnection sql = new SQLiteConnection();
-
+    final static int MAX_ITERATIONS = 1000;
 
     //Works out the similarities between the users
-    public void simuilarityMeasure() {
+    public void similarityMeasure(int num1, int num2) {
         sql.connect();
         //Stores the average for both of the users
         double userAAverage;
         double userBAverage;
         HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>();
 
-        for (int i = 1; i < 1000; ++i) {
+        for (int i = num1; i < MAX_ITERATIONS; ++i) {
             userAAverage = sql.getUserAverage(i);
-            for (int y = 1; y < 1000; ++y) {
+            for (int y = num2; y < MAX_ITERATIONS; ++y) {
                 userBAverage = sql.getUserAverage(y);
 
                 if (i == y) {
-//                    sql.addSimilarity(i, y, 0);
+                    similaritiesToAdd.put(i + "," + y + "0.0", 0.0);
                 } else {
                     //Finds the items which both users have rated and the rating associated with them for both users. Returns a hashmap
                     HashMap<Integer, String> similarItemsRated = sql.similarityValues(i, y);
@@ -54,7 +54,7 @@ public class UserBasedCollabFiltering {
                         double similarity = (topLine / bottomLine);
 
                         //Batch processing (insertion)
-                        if (similaritiesToAdd.entrySet().size() <= 1000) {
+                        if (similaritiesToAdd.entrySet().size() <= 1000 && i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
                             similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
 //                            System.out.println("*********************ADDING************************");
                         } else {
@@ -65,18 +65,19 @@ public class UserBasedCollabFiltering {
                                 double similarityRating = entry.getValue();
 
                                 sql.insertSimilarityValue(userA, userB, similarityRating, similarItems);
-
-
-
                             }
-                            System.out.println("*********************DONE*************************");
+                            System.out.println("*********************DONE STACK*************************");
+                            if(i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
+                                similarityMeasure(i, y);
+                            }
                             return;
                         }
+                    } else {
+                        similaritiesToAdd.put(i + "," + y + "," + "0.0", 0.0);
                     }
                 }
             }
         }
 
     }
-
 }
