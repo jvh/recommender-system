@@ -1,3 +1,5 @@
+import com.sun.xml.internal.bind.v2.TODO;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -54,7 +56,7 @@ public class UserBasedCollabFiltering {
                         double similarity = (topLine / bottomLine);
 
                         //Batch processing (insertion)
-                        if (similaritiesToAdd.entrySet().size() <= 1000) {
+                        if (similaritiesToAdd.entrySet().size() <= 10000) {
                             similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
 //                            System.out.println("*********************ADDING************************");
                         } else {
@@ -76,6 +78,27 @@ public class UserBasedCollabFiltering {
                 }
             }
         }
+
+    }
+
+
+    // Works out predicted rating for two users
+    public void calculatePredictedRating(int userA, int itemB) {
+        sql.connect();
+        //TODO Needs to check if user has actually rated item, if so dont calculate
+        HashMap<Integer, Double> neighbourMap = sql.getNeighbourSelection(userA);
+        double meanA = sql.getUserAverage(userA);
+        Double top = 0.0;
+        Double bottom = 0.0;
+        for(HashMap.Entry<Integer, Double> entry : neighbourMap.entrySet()) {
+            int userNew = entry.getKey();
+            double similarity = entry.getValue();
+            top += similarity * (sql.getNeighbourhoodRated(userNew, itemB) - sql.getUserAverage(userNew));
+            bottom += similarity;
+        }
+
+        System.out.println(meanA + (top/bottom));
+        sql.closeConnection();
 
     }
 

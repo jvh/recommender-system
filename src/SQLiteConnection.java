@@ -28,6 +28,53 @@ public class SQLiteConnection {
         }
     }
 
+    public HashMap<Integer, Double> getNeighbourSelection(int userID) {
+        HashMap<Integer, Double> resultMap = new HashMap<>();
+//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
+//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
+        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
+        try {
+            Statement queryStatement = connection.createStatement();
+            ResultSet resultSet = queryStatement.executeQuery(query);
+            while(resultSet.next()) {
+                int userB = resultSet.getInt(1);
+                double similarityValue = resultSet.getDouble(2);
+                resultMap.put(userB, similarityValue);
+//                System.out.println(resultSet.getInt(1) + " " + resultSet.getDouble(2) + " " + resultSet.getInt(3));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return resultMap;
+    }
+
+    public void insertPredictedRating(int userID, int itemID, double rating, String tableName) {
+        String update = "UPDATE " +  tableName + "  SET predictedRating = " + rating + " WHERE userID = " + userID + " AND itemID = " + itemID;
+        try {
+            Statement updateStatement = connection.createStatement();
+            updateStatement.executeUpdate(update);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Double getNeighbourhoodRated(int userID, int itemID) {
+        String query = "SELECT realRating FROM trainingSET WHERE userID = " + userID + " AND itemID = " + itemID;
+        double result = 0;
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            while(resultSet.next()) {
+                result = resultSet.getDouble(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
+
     public double getUserAverage(int userID) {
         double average = 0;
         int resultCount = 0;
@@ -100,14 +147,15 @@ public class SQLiteConnection {
             ResultSet resultSet = statement.executeQuery(query);
 
             while(resultSet.next()) {
-                int itemID = resultSet.getInt(2);
-                if(!resultMap.containsKey(itemID)) {
-                    double valueA = resultSet.getInt(3);
-                    resultSet.next();
-                    double valueB = resultSet.getInt(3);
-                    String result = valueA + "," + valueB;
-                    resultMap.put(itemID, result);
-                }
+                System.out.println(resultSet.getInt(1) + " " + resultSet.getDouble(2) + " " + resultSet.getInt(3));
+//                int itemID = resultSet.getInt(2);
+//                if(!resultMap.containsKey(itemID)) {
+//                    double valueA = resultSet.getInt(3);
+//                    resultSet.next();
+//                    double valueB = resultSet.getInt(3);
+//                    String result = valueA + "," + valueB;
+//                    resultMap.put(itemID, result);
+//                }
             }
 
         } catch (SQLException e) {
@@ -130,10 +178,14 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
+        sqLiteConnection.getNeighbourhoodRated(1,62440);
+//        sqLiteConnection.similarityValues(49, 124);
+//        sqLiteConnection.insertPredictedRating(1, 62440, 6.2, "testSet1");
 //        sqLiteConnection.createTestDatabase("testSet1", 1000);
 //        sqLiteConnection.getUserAverage(2);
 //        sqLiteConnection.getUserAverage("averageSet", 1);
-        System.out.println(sqLiteConnection.similarityValues(1, 16));
+//        sqLiteConnection.getNeighbourSelection(1);
+//        System.out.println(sqLiteConnection.similarityValues(1, 16));
 //        sqLiteConnection.insertSimilarityValue(1,2, 343.432);
 //        sqLiteConnection.intersectTest();
 
