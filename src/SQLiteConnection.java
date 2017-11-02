@@ -1,5 +1,4 @@
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SQLiteConnection {
@@ -19,8 +18,8 @@ public class SQLiteConnection {
         }
     }
 
-    public void insertSimilarityValue(int userA, int userB, double similarityValue) {
-        String insert = "INSERT INTO similaritySet VALUES (" + userA + "," + userB + "," + similarityValue + ")";
+    public void insertSimilarityValue(int userA, int userB, double similarityValue, int amountOfSimilarItemsRated) {
+        String insert = "INSERT INTO similaritySet VALUES (" + userA + "," + userB + "," + similarityValue + "," + amountOfSimilarItemsRated + ")";
         try {
             Statement insertStatement = connection.createStatement();
             insertStatement.executeUpdate(insert);
@@ -28,7 +27,6 @@ public class SQLiteConnection {
             e.printStackTrace();
         }
     }
-
 
     public double getUserAverage(int userID) {
         double average = 0;
@@ -67,7 +65,28 @@ public class SQLiteConnection {
         return average;
     }
 
+    public void createTestDatabase(String tableName, int size) {
+        String create = "CREATE TABLE " + tableName + " (userID INTEGER, itemID INTEGER, realRating REAL, predictedRating REAL)";
+        String insert = "INSERT INTO " + tableName + " SELECT * FROM trainingSet LIMIT " + size;
+        try {
+            Statement createStatement = connection.createStatement();
+            createStatement.executeUpdate(create);
+            Statement insertStatement = connection.createStatement();
+            insertStatement.executeUpdate(insert);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
+    public void deleteTestDatabase(String tableName) {
+        String delete = "DROP TABLE " + tableName;
+        try {
+            Statement deleteStatement = connection.createStatement();
+            deleteStatement.executeUpdate(delete);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
     public HashMap<Integer, String> similarityValues(int userA, int userB) {
         HashMap<Integer, String> resultMap = new HashMap<>();
@@ -94,55 +113,8 @@ public class SQLiteConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-//        System.out.println(resultMap);
+//        System.out.println(resultMap.size());
         return resultMap;
-    }
-
-    public HashMap<Integer, HashMap<Integer,Integer>> getAmountOfRecords(String tableName, int amount) {
-        HashMap<Integer, HashMap<Integer, Integer>> userIdMap = new HashMap<>();
-        try {
-
-            int userid1 = 232;
-            int userid2 = 543;
-//            String query2 = "SELECT * FROM" + " " + tableName + " WHERE itemID IN (434,879);
-
-
-            String query = "SELECT * FROM" + " " + tableName + " LIMIT " + amount;
-
-            Statement statement = connection.createStatement();
-//            statement.setQueryTimeout(30);
-
-//            ResultSet resultSet = preparedStatement.executeQuery();
-//            System.out.println(resultSet);
-            ResultSet resultSet = statement.executeQuery(query);
-            int currentUserId = 0;
-
-            while(resultSet.next()) {
-
-                HashMap<Integer, Integer> pairRatingsMap;
-                int foundUserId = resultSet.getInt(1);
-
-                if(foundUserId != currentUserId) {
-                    currentUserId = foundUserId;
-                    pairRatingsMap = new HashMap<>();
-                    userIdMap.put(foundUserId, pairRatingsMap);
-
-                } else {
-                    pairRatingsMap = userIdMap.get(foundUserId);
-                }
-                pairRatingsMap.put(resultSet.getInt(2), resultSet.getInt(3));
-
-            }
-
-//            System.out.println(userIdMap.entrySet().size());
-//            for(int i = 1 ; i <= userIdMap.entrySet().size(); i++) {
-//                System.out.println(userIdMap.get(i));
-//            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return userIdMap;
     }
 
     public void closeConnection() {
@@ -158,9 +130,10 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
+//        sqLiteConnection.createTestDatabase("testSet1", 1000);
 //        sqLiteConnection.getUserAverage(2);
 //        sqLiteConnection.getUserAverage("averageSet", 1);
-        sqLiteConnection.similarityValues(49, 124);
+        System.out.println(sqLiteConnection.similarityValues(1, 16));
 //        sqLiteConnection.insertSimilarityValue(1,2, 343.432);
 //        sqLiteConnection.intersectTest();
 

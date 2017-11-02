@@ -17,9 +17,9 @@ public class UserBasedCollabFiltering {
         double userBAverage;
         HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>();
 
-        for (int i = 1; i < 100000; ++i) {
+        for (int i = 1; i < 1000; ++i) {
             userAAverage = sql.getUserAverage(i);
-            for (int y = 1; y < 100000; ++y) {
+            for (int y = 1; y < 1000; ++y) {
                 userBAverage = sql.getUserAverage(y);
 
                 if (i == y) {
@@ -58,16 +58,17 @@ public class UserBasedCollabFiltering {
                         double similarity = (topLine / bottomLine);
 
                         //Batch processing (insertion)
-                        if (similaritiesToAdd.entrySet().size() <= 100000) {
-                            similaritiesToAdd.put(i + "," + y, similarity);
+                        if (similaritiesToAdd.entrySet().size() <= 1000) {
+                            similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
 //                            System.out.println("*********************ADDING************************");
                         } else {
                             for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
                                 int userA = Integer.parseInt(entry.getKey().split(",")[0]);
                                 int userB = Integer.parseInt(entry.getKey().split(",")[1]);
+                                int similarItems = Integer.parseInt(entry.getKey().split(",")[2]);
                                 double similarityRating = entry.getValue();
 
-                                sql.insertSimilarityValue(userA, userB, similarityRating);
+                                sql.insertSimilarityValue(userA, userB, similarityRating, similarItems);
 
 
 
