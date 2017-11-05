@@ -18,17 +18,19 @@ public class SQLiteConnection {
         }
     }
 
-    public void getAmountOfRows(String tableName) {
+    public int getAmountOfRows(String tableName) {
+        int count;
         String query = "SELECT COUNT(userID) FROM " + tableName;
         try {
             Statement queryStatement = connection.createStatement();
             ResultSet resultSet = queryStatement.executeQuery(query);
             while(resultSet.next()) {
-                System.out.println(resultSet.getInt(1));
+                count = resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return count
     }
 
     public void insertSimilarityValue(int userA, int userB, double similarityValue, int amountOfSimilarItemsRated) {
