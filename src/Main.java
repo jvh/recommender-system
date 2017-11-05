@@ -8,7 +8,7 @@ public class Main {
     public static void main(String[] args) {
         UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering();
         //  Testing out if the similaritymeasure works
-        //  ubcf.similarityMeasure();
+        ubcf.similarityMeasure(1,1);
 
 //        ubcf.calculatePredictedRating(1, 20919);
 

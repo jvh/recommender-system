@@ -19,7 +19,7 @@ public class SQLiteConnection {
     }
 
     public int getAmountOfRows(String tableName) {
-        int count;
+        int count = 0;
         String query = "SELECT COUNT(userID) FROM " + tableName;
         try {
             Statement queryStatement = connection.createStatement();
@@ -30,9 +30,9 @@ public class SQLiteConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return count
+        return count;
     }
-
+    //TODO Batch process to 1000 items per insertion
     public void insertSimilarityValue(int userA, int userB, double similarityValue, int amountOfSimilarItemsRated) {
         String insert = "INSERT INTO similaritySet VALUES (" + userA + "," + userB + "," + similarityValue + "," + amountOfSimilarItemsRated + ")";
         try {
@@ -193,7 +193,7 @@ public class SQLiteConnection {
         sqLiteConnection.connect();
 //        sqLiteConnection.getNeighbourhoodRated(1,62440);
 //        sqLiteConnection.getAmountOfRows("trainingSet");
-//        sqLiteConnection.similarityValues(49, 124);
+        System.out.println(sqLiteConnection.similarityValues(49, 124));
 //        sqLiteConnection.insertPredictedRating(1, 62440, 6.2, "testSet1");
 //        sqLiteConnection.createTestDatabase("testSet1", 100000);
 //        sqLiteConnection.getAmountOfRows("testSet1");
