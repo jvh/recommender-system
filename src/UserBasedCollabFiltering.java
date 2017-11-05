@@ -8,8 +8,7 @@ import java.util.HashMap;
  */
 public class UserBasedCollabFiltering {
 
-    static SQLiteConnection sql = new SQLiteConnection();
-    final static int MAX_ITERATIONS = sql.getAmountOfRows("trainingSet");
+    SQLiteConnection sql = new SQLiteConnection();
 
 
     //Works out the similarities between the users
@@ -20,9 +19,15 @@ public class UserBasedCollabFiltering {
         double userBAverage;
         HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>();
 
-        for (int i = num1; i < MAX_ITERATIONS; ++i) {
+        //Maximum number of iterations to create the similarity matrix
+        int maxIterations = sql.getAmountOfRows("trainingSet");
+        //Number of batches needed
+        double numberBatches = Math.ceil(maxIterations/1000.0);
+        System.out.println("maxIterations: " + maxIterations + ", numberBatches: " + numberBatches);
+
+        for (int i = num1; i < maxIterations; ++i) {
             userAAverage = sql.getUserAverage(i);
-            for (int y = num2; y < MAX_ITERATIONS; ++y) {
+            for (int y = num2; y < maxIterations; ++y) {
                 userBAverage = sql.getUserAverage(y);
 
                 if (i == y) {
@@ -63,28 +68,29 @@ public class UserBasedCollabFiltering {
                         similaritiesToAdd.put(i + "," + y + "," + 0, 0.0);
                     }
 
-                    System.out.println("i= " + i + " y= " + y);
+//                    System.out.println("i= " + i + " y= " + y);
 
                     //Batch processing (insertion)
-                    if (similaritiesToAdd.entrySet().size() <= 1000 && i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
+                    if (similaritiesToAdd.entrySet().size() <= 1000 && i < maxIterations && y < maxIterations) {
                         similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
-                        System.out.println(similaritiesToAdd.size());
+//                        System.out.println(similaritiesToAdd.size());
 //                            System.out.println("*********************ADDING************************");
                     } else {
-                        System.out.println("else " + similaritiesToAdd.size());
+                        System.out.println("Starting batch");
                         for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
                             int userA = Integer.parseInt(entry.getKey().split(",")[0]);
                             int userB = Integer.parseInt(entry.getKey().split(",")[1]);
                             int similarItems = Integer.parseInt(entry.getKey().split(",")[2]);
                             double similarityRating = entry.getValue();
 
-                            System.out.println(userA + ", userB: " + userB + " y: " + y + ", similarity: " + similarity + ", similarItem: " + similarItems);
+//                            System.out.println(userA + ", userB: " + userB + " y: " + y + ", similarity: " + similarity + ", similarItem: " + similarItems);
 
                             sql.insertSimilarityValue(userA, userB, similarityRating, similarItems);
                         }
-                        if(i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
+                        System.out.println("DONE BATCH");
+                        if(i < maxIterations && y < maxIterations) {
                             System.out.println("*********************DONE STACK*************************");
-                            similarityMeasure(i, y);
+//                            similarityMeasure(i, y);
                         } else {
                             System.out.println("FINISHED");
                             return;
