@@ -18,6 +18,19 @@ public class SQLiteConnection {
         }
     }
 
+    public void getAmountOfRows(String tableName) {
+        String query = "SELECT COUNT(userID) FROM " + tableName;
+        try {
+            Statement queryStatement = connection.createStatement();
+            ResultSet resultSet = queryStatement.executeQuery(query);
+            while(resultSet.next()) {
+                System.out.println(resultSet.getInt(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void insertSimilarityValue(int userA, int userB, double similarityValue, int amountOfSimilarItemsRated) {
         String insert = "INSERT INTO similaritySet VALUES (" + userA + "," + userB + "," + similarityValue + "," + amountOfSimilarItemsRated + ")";
         try {
@@ -72,8 +85,6 @@ public class SQLiteConnection {
         }
         return result;
     }
-
-
 
     public double getUserAverage(int userID) {
         double average = 0;
@@ -178,10 +189,12 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
-        sqLiteConnection.getNeighbourhoodRated(1,62440);
+//        sqLiteConnection.getNeighbourhoodRated(1,62440);
+//        sqLiteConnection.getAmountOfRows("trainingSet");
 //        sqLiteConnection.similarityValues(49, 124);
 //        sqLiteConnection.insertPredictedRating(1, 62440, 6.2, "testSet1");
-//        sqLiteConnection.createTestDatabase("testSet1", 1000);
+//        sqLiteConnection.createTestDatabase("testSet1", 100000);
+//        sqLiteConnection.getAmountOfRows("testSet1");
 //        sqLiteConnection.getUserAverage(2);
 //        sqLiteConnection.getUserAverage("averageSet", 1);
 //        sqLiteConnection.getNeighbourSelection(1);
