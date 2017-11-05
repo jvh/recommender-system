@@ -158,15 +158,15 @@ public class SQLiteConnection {
             ResultSet resultSet = statement.executeQuery(query);
 
             while(resultSet.next()) {
-                System.out.println(resultSet.getInt(1) + " " + resultSet.getDouble(2) + " " + resultSet.getInt(3));
-//                int itemID = resultSet.getInt(2);
-//                if(!resultMap.containsKey(itemID)) {
-//                    double valueA = resultSet.getInt(3);
-//                    resultSet.next();
-//                    double valueB = resultSet.getInt(3);
-//                    String result = valueA + "," + valueB;
-//                    resultMap.put(itemID, result);
-//                }
+//                System.out.println(resultSet.getInt(1) + " " + resultSet.getDouble(2) + " " + resultSet.getInt(3));
+                int itemID = resultSet.getInt(2);
+                if(!resultMap.containsKey(itemID)) {
+                    double valueA = resultSet.getInt(3);
+                    resultSet.next();
+                    double valueB = resultSet.getInt(3);
+                    String result = valueA + "," + valueB;
+                    resultMap.put(itemID, result);
+                }
             }
 
         } catch (SQLException e) {

@@ -7,9 +7,10 @@ public class Main {
 
     public static void main(String[] args) {
         UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering();
-//        ubcf.similarityMeasure();
+        //  Testing out if the similaritymeasure works
+        //  ubcf.similarityMeasure();
 
-        ubcf.calculatePredictedRating(1, 20919);
+//        ubcf.calculatePredictedRating(1, 20919);
 
 
 //        Main m = new Main();

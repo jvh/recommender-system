@@ -8,8 +8,9 @@ import java.util.HashMap;
  */
 public class UserBasedCollabFiltering {
 
-    SQLiteConnection sql = new SQLiteConnection();
-    final static int MAX_ITERATIONS = 1000;
+    static SQLiteConnection sql = new SQLiteConnection();
+    final static int MAX_ITERATIONS = sql.getAmountOfRows("trainingSet");
+
 
     //Works out the similarities between the users
     public void similarityMeasure(int num1, int num2) {
@@ -25,7 +26,7 @@ public class UserBasedCollabFiltering {
                 userBAverage = sql.getUserAverage(y);
 
                 if (i == y) {
-                    similaritiesToAdd.put(i + "," + y + 0, 0.0);
+                    similaritiesToAdd.put(i + "," + y + "," + 0, 0.0);
                 } else {
                     //Finds the items which both users have rated and the rating associated with them for both users. Returns a hashmap
                     HashMap<Integer, String> similarItemsRated = sql.similarityValues(i, y);
@@ -36,6 +37,9 @@ public class UserBasedCollabFiltering {
                     //Stores the calculations for future use
                     double userACalc = 0;
                     double userBCalc = 0;
+                    //Similarity between the 2 users
+                    double similarity = 0;
+
 
                     if (similarItemsRated.entrySet().size() > 0) {
                         for (HashMap.Entry<Integer, String> entry : similarItemsRated.entrySet()) {
@@ -53,11 +57,13 @@ public class UserBasedCollabFiltering {
                         }
                         double bottomLine = Math.sqrt(userACalc) * Math.sqrt(userBCalc);
 
-                        double similarity = (topLine / bottomLine);
+                        similarity = (topLine / bottomLine);
 
                     } else {
                         similaritiesToAdd.put(i + "," + y + "," + 0, 0.0);
                     }
+
+                    System.out.println("i= " + i + " y= " + y);
 
                     //Batch processing (insertion)
                     if (similaritiesToAdd.entrySet().size() <= 1000 && i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
@@ -65,18 +71,19 @@ public class UserBasedCollabFiltering {
                         System.out.println(similaritiesToAdd.size());
 //                            System.out.println("*********************ADDING************************");
                     } else {
-                        System.out.println(similaritiesToAdd.size());
+                        System.out.println("else " + similaritiesToAdd.size());
                         for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
                             int userA = Integer.parseInt(entry.getKey().split(",")[0]);
                             int userB = Integer.parseInt(entry.getKey().split(",")[1]);
                             int similarItems = Integer.parseInt(entry.getKey().split(",")[2]);
                             double similarityRating = entry.getValue();
 
+                            System.out.println(userA + ", userB: " + userB + " y: " + y + ", similarity: " + similarity + ", similarItem: " + similarItems);
+
                             sql.insertSimilarityValue(userA, userB, similarityRating, similarItems);
                         }
-                        System.out.println("*********************DONE STACK*************************");
                         if(i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
-                            System.out.println("recurse");
+                            System.out.println("*********************DONE STACK*************************");
                             similarityMeasure(i, y);
                         } else {
                             System.out.println("FINISHED");
@@ -87,13 +94,12 @@ public class UserBasedCollabFiltering {
                 }
             }
         }
-
     }
 
     // Works out predicted rating for two users
     public void calculatePredictedRating(int userA, int itemB) {
         sql.connect();
-        //TODO Needs to check if user has actually rated item, if so dont calculate
+        //TODO Needs to check if user has actually rated item, if so don't calculate
         HashMap<Integer, Double> neighbourMap = sql.getNeighbourSelection(userA);
         double meanA = sql.getUserAverage(userA);
         Double top = 0.0;
