@@ -20,7 +20,7 @@ public class UserBasedCollabFiltering {
         HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>(1000);
 
         //Maximum number of iterations to create the similarity matrix
-        int maxIterations = sql.getAmountOfRows("trainingSet");
+        int maxIterations = sql.getAmountOfRows("testSet1");
         //Number of batches needed
         double numberBatches = Math.ceil(maxIterations/1000.0);
         System.out.println("maxIterations: " + maxIterations + ", numberBatches: " + numberBatches);
@@ -39,6 +39,10 @@ public class UserBasedCollabFiltering {
                     similarItemsRated = sql.similarityValues(i, y);
 //                    HashMap<Integer, String> similarItemsRated = new HashMap<Integer, String>();
 
+
+                    long startTime1 = System.currentTimeMillis();
+
+
                     //Stores the calculation for the top line of the similarity measure equation
                     double topLine = 0;
                     //Stores the calculations for future use
@@ -48,7 +52,7 @@ public class UserBasedCollabFiltering {
                     double similarity = 0;
 
 
-                    if (similarItemsRated.entrySet().size() > 0) {
+                    if (similarItemsRated.entrySet().size() > 1) {
                         for (HashMap.Entry<Integer, String> entry : similarItemsRated.entrySet()) {
                             int itemID = entry.getKey();
                             //Ratings returned for both users for the same item
@@ -66,18 +70,13 @@ public class UserBasedCollabFiltering {
 
                         similarity = (topLine / bottomLine);
 
-
-
-                        if (i < maxIterations && y < maxIterations) {
+                        if (i < maxIterations && y < maxIterations && !Double.isNaN(similarity)) {
                             similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
                             similarItemsRated.clear();
 //                        System.out.println(similaritiesToAdd.size());
 //                            System.out.println("*********************ADDING************************");
                         }
                         if (similaritiesToAdd.size() % 1000 == 0){
-                            if (similaritiesToAdd.size() == 1002) {
-                                System.out.println("kappa");
-                            }
                             System.out.println("Starting batch");
                             for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
                                 int userA = Integer.parseInt(entry.getKey().split(",")[0]);
@@ -124,8 +123,9 @@ public class UserBasedCollabFiltering {
             top += similarity * (sql.getNeighbourhoodRated(userNew, itemB) - sql.getUserAverage(userNew));
             bottom += similarity;
         }
-
-        System.out.println(meanA + (top/bottom));
+        double rating = meanA + (top/bottom);
+//        System.out.println(meanA + (top/bottom));
+        sql.insertPredictedRating(userA, itemB, rating, "testSet1");
         sql.closeConnection();
 
     }

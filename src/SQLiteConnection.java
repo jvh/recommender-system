@@ -153,14 +153,17 @@ public class SQLiteConnection {
 
         try {
 
-            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID";
-//            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID BETWEEN 1 AND 125 GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID BETWEEN 1 AND 125 ORDER BY itemID";
+            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID ASC";
+//             String query = "SELECT t1.* FROM testSet1 AS t1 JOIN (SELECT itemID, realRating FROM testSet1 WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID ASC";
+// String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID ORDER BY userID";
+//            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID BETWEEN 1 AND 1000 GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID BETWEEN 1 AND 1000 ORDER BY userID";
 
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
             while(resultSet.next()) {
-//                System.out.println(resultSet.getInt(1) + " " + resultSet.getDouble(2) + " " + resultSet.getInt(3));
+//                System.out.println(resultSet.getInt(1));
+//                System.out.println(resultSet.getInt(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3));
                 int itemID = resultSet.getInt(2);
                 if(!resultMap.containsKey(itemID)) {
                     double valueA = resultSet.getInt(3);
@@ -174,7 +177,6 @@ public class SQLiteConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-//        System.out.println(resultMap.size());
         return resultMap;
     }
 
@@ -193,9 +195,9 @@ public class SQLiteConnection {
         sqLiteConnection.connect();
 //        sqLiteConnection.getNeighbourhoodRated(1,62440);
 //        sqLiteConnection.getAmountOfRows("trainingSet");
-        System.out.println(sqLiteConnection.similarityValues(49, 124));
+//        System.out.println(sqLiteConnection.similarityValues(49, 97));
 //        sqLiteConnection.insertPredictedRating(1, 62440, 6.2, "testSet1");
-//        sqLiteConnection.createTestDatabase("testSet1", 100000);
+//        sqLiteConnection.createTestDatabase("testSet1", 10000);
 //        sqLiteConnection.getAmountOfRows("testSet1");
 //        sqLiteConnection.getUserAverage(2);
 //        sqLiteConnection.getUserAverage("averageSet", 1);
