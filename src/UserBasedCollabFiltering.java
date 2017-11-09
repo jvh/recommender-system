@@ -9,52 +9,44 @@ import java.util.HashMap;
 public class UserBasedCollabFiltering {
 
     SQLiteConnection sql = new SQLiteConnection();
-
+    //The size of the batches before inserting into the DB
+    public static final int BATCH_SIZE = 1000;
 
     //Works out the similarities between the users
-    public void similarityMeasure(int num1, int num2) {
+    public void similarityMeasure() {
         sql.connect();
+
         //Stores the average for both of the users
         double userAAverage;
         double userBAverage;
-        HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>(1000);
+        //The capacity being the size of the batches
+        HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>(BATCH_SIZE);
 
         //Maximum number of iterations to create the similarity matrix
-        int maxIterations = sql.getAmountOfRows("testSet1");
-        //Number of batches needed
-        double numberBatches = Math.ceil(maxIterations/1000.0);
-        System.out.println("maxIterations: " + maxIterations + ", numberBatches: " + numberBatches);
+        final int MAX_ITERATIONS = sql.getAmountOfRows("testSet1");
 
+        //Stores the items rated by 2 users.
         HashMap<Integer, String> similarItemsRated;
 
-        for (int i = num1; i < maxIterations; i++) {
+        for (int i = 1; i < MAX_ITERATIONS; i++) {
             userAAverage = sql.getUserAverage(i);
-            for (int y = num2; y < maxIterations; y++) {
+            for (int y = 1; y < MAX_ITERATIONS; y++) {
                 userBAverage = sql.getUserAverage(y);
 
-                if (i != y) {
-
+                //As to not produce duplicates in the similarity ratings table or to create similarities for the same users, i.e. i = 1, y = 1
+                if (i <= y) {
                     //TODO This is selecting a value from the database each time, issue?
-                    //Finds the items which both users have rated and the rating associated with them for both users. Returns a hashmap
+                    //Finds the items which both users have rated and the rating associated with them for both users.
                     similarItemsRated = sql.similarityValues(i, y);
-//                    HashMap<Integer, String> similarItemsRated = new HashMap<Integer, String>();
 
-
-                    long startTime1 = System.currentTimeMillis();
-
-
-                    //Stores the calculation for the top line of the similarity measure equation
                     double topLine = 0;
-                    //Stores the calculations for future use
                     double userACalc = 0;
                     double userBCalc = 0;
-                    //Similarity between the 2 users
                     double similarity = 0;
 
 
                     if (similarItemsRated.entrySet().size() > 1) {
                         for (HashMap.Entry<Integer, String> entry : similarItemsRated.entrySet()) {
-                            int itemID = entry.getKey();
                             //Ratings returned for both users for the same item
                             double ratingA = Double.parseDouble(entry.getValue().split(",")[0]);
                             double ratingB = Double.parseDouble(entry.getValue().split(",")[1]);
@@ -70,13 +62,13 @@ public class UserBasedCollabFiltering {
 
                         similarity = (topLine / bottomLine);
 
-                        if (i < maxIterations && y < maxIterations && !Double.isNaN(similarity)) {
+                        //Add to the similarities table only if we have not reached the end of the users
+                        if (i <= MAX_ITERATIONS && y <= MAX_ITERATIONS && !Double.isNaN(similarity)) {
                             similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
                             similarItemsRated.clear();
-//                        System.out.println(similaritiesToAdd.size());
-//                            System.out.println("*********************ADDING************************");
                         }
-                        if (similaritiesToAdd.size() % 1000 == 0){
+
+                        if (similaritiesToAdd.size() % 1000 == 0 || (i == MAX_ITERATIONS & y == MAX_ITERATIONS)){
                             System.out.println("Starting batch");
                             for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
                                 int userA = Integer.parseInt(entry.getKey().split(",")[0]);
@@ -90,7 +82,7 @@ public class UserBasedCollabFiltering {
                             }
                             similaritiesToAdd.clear();
                             System.out.println("DONE BATCH");
-//                        if(i < maxIterations && y < maxIterations) {
+//                        if(i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
 //                            System.out.println("*********************DONE STACK*************************");
 ////                            similarityMeasure(i, y);
 //                        } else {
