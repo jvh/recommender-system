@@ -7,12 +7,15 @@ public class Main {
 
     public static void main(String[] args) {
         UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering();
+        SQLiteConnection sql = new SQLiteConnection();
+        sql.connect();
         //  Testing out if the similaritymeasure works
 //        ubcf.similarityMeasure(1,1);
 
-        ubcf.calculatePredictedRating(9, 11);
+//        ubcf.calculatePredictedRating(9, 11);
 
-
+        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory("trainingSet"));
+        sql.closeConnection();
 //        Main m = new Main();
 
 //        m.hashWithinHashTest();

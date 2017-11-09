@@ -88,6 +88,39 @@ public class SQLiteConnection {
         return result;
     }
 
+    public HashMap<Integer, String> similarityValues(int userA, int userB) {
+        HashMap<Integer, String> resultMap = new HashMap<>();
+
+        try {
+
+            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID ASC";
+//             String query = "SELECT t1.* FROM testSet1 AS t1 JOIN (SELECT itemID, realRating FROM testSet1 WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID ASC";
+// String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID ORDER BY userID";
+//            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID BETWEEN 1 AND 1000 GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID BETWEEN 1 AND 1000 ORDER BY userID";
+
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while(resultSet.next()) {
+//                System.out.println(resultSet.getInt(1));
+//                System.out.println(resultSet.getInt(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3));
+                int itemID = resultSet.getInt(2);
+                if(!resultMap.containsKey(itemID)) {
+                    double valueA = resultSet.getInt(3);
+                    resultSet.next();
+                    double valueB = resultSet.getInt(3);
+                    String result = valueA + "," + valueB;
+                    resultMap.put(itemID, result);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return resultMap;
+    }
+
+
     public double getUserAverage(int userID) {
         double average = 0;
         int resultCount = 0;
@@ -148,37 +181,33 @@ public class SQLiteConnection {
         }
     }
 
-    public HashMap<Integer, String> similarityValues(int userA, int userB) {
-        HashMap<Integer, String> resultMap = new HashMap<>();
+    public HashMap<Integer, HashMap<Integer, Double>> getTrainingSetToMemory(String tableName) {
+
+        HashMap<Integer, HashMap<Integer, Double>> resultMap = new HashMap<>();
 
         try {
-
-            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID ASC";
-//             String query = "SELECT t1.* FROM testSet1 AS t1 JOIN (SELECT itemID, realRating FROM testSet1 WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID ASC";
-// String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID ORDER BY userID";
-//            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID BETWEEN 1 AND 1000 GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID BETWEEN 1 AND 1000 ORDER BY userID";
-
+            String query = "SELECT userID, itemID, realRating FROM " + tableName;
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
+            HashMap<Integer, Double> itemRatingMap = new HashMap<>();
+            int tempUser = 1;
             while(resultSet.next()) {
-//                System.out.println(resultSet.getInt(1));
-//                System.out.println(resultSet.getInt(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3));
-                int itemID = resultSet.getInt(2);
-                if(!resultMap.containsKey(itemID)) {
-                    double valueA = resultSet.getInt(3);
-                    resultSet.next();
-                    double valueB = resultSet.getInt(3);
-                    String result = valueA + "," + valueB;
-                    resultMap.put(itemID, result);
+                if (tempUser != resultSet.getInt(1)) {
+                    itemRatingMap = new HashMap<>();
+                    tempUser = resultSet.getInt(1);
                 }
-            }
+                itemRatingMap.put(resultSet.getInt(2), resultSet.getDouble(3));
+                resultMap.put(resultSet.getInt(1), itemRatingMap);
 
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return resultMap;
     }
+
 
     public void closeConnection() {
         try {
@@ -193,6 +222,12 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
+        HashMap<Integer, HashMap<Integer, Double>> resultMap = sqLiteConnection.getTrainingSetToMemory("trainingSet");
+        for (int i = 1; i < resultMap.entrySet().size() && i < 100; i++ ) {
+            System.out.println(i + "," + resultMap.get(i));
+//        System.out.println(resultMap.get)
+        }
+
 //        sqLiteConnection.getNeighbourhoodRated(1,62440);
 //        sqLiteConnection.getAmountOfRows("trainingSet");
 //        System.out.println(sqLiteConnection.similarityValues(49, 97));

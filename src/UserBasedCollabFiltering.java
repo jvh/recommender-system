@@ -12,6 +12,49 @@ public class UserBasedCollabFiltering {
     //The size of the batches before inserting into the DB
     public static final int BATCH_SIZE = 1000;
 
+    public void calculateSimilarRated(HashMap<Integer,HashMap<Integer,Double>> map) {
+        HashMap<Integer, HashMap<Integer, Double>> resultMap = new HashMap<>();
+
+        HashMap<Integer, Double> currentUserRating;
+        for (int i = 1; i < map.entrySet().size() ; i++) {
+            currentUserRating = map.get(i);
+
+            for (int j = i + 1 ; j < map.entrySet().size() ; j++) {
+                HashMap<Integer, Double> mapJ = map.get(j);
+
+                double topLine = 0;
+                double userACalc = 0;
+                double userBCalc = 0;
+                boolean similarityExists = false;
+
+                for (int key : mapJ.keySet()) {
+                    if (currentUserRating.containsKey(key)) {
+                        similarityExists = true;
+                        System.out.println(i);
+                        double first = currentUserRating.get(key) - sql.getUserAverage(i);
+                        double second = mapJ.get(key) - sql.getUserAverage(j);
+
+                        topLine += (first * second);
+                        userACalc += Math.pow(first, 2);
+                        userBCalc += Math.pow(second, 2);
+                    }
+                }
+                if(similarityExists) {
+                    double bottomLine = Math.sqrt(userACalc) * Math.sqrt(userBCalc);
+                    double similarity = (topLine / bottomLine);
+
+
+                    System.out.println("User A: " + i + " User B: " + j + " Similarity: " + similarity);
+                }
+
+            }
+
+        }
+
+
+    }
+
+
     //Works out the similarities between the users
     public void similarityMeasure() {
         sql.connect();
@@ -28,6 +71,7 @@ public class UserBasedCollabFiltering {
         //Stores the items rated by 2 users.
         HashMap<Integer, String> similarItemsRated;
 
+
         for (int i = 1; i < MAX_ITERATIONS; i++) {
             userAAverage = sql.getUserAverage(i);
             for (int y = 1; y < MAX_ITERATIONS; y++) {
@@ -38,12 +82,15 @@ public class UserBasedCollabFiltering {
                     //TODO This is selecting a value from the database each time, issue?
                     //Finds the items which both users have rated and the rating associated with them for both users.
                     similarItemsRated = sql.similarityValues(i, y);
+                    //Finds the items which both users have rated and the rating associated with them for both users. Returns a hashmap
+//                    similarItemsRated = sql.similarityValues(i, y);
+//                    HashMap<Integer, String> similarItemsRated = new HashMap<Integer, String>();
+
 
                     double topLine = 0;
                     double userACalc = 0;
                     double userBCalc = 0;
                     double similarity = 0;
-
 
                     if (similarItemsRated.entrySet().size() > 1) {
                         for (HashMap.Entry<Integer, String> entry : similarItemsRated.entrySet()) {
