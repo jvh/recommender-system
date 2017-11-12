@@ -18,6 +18,10 @@ public class SQLiteConnection {
         }
     }
 
+    public Connection getConnection() {
+        return connection;
+    }
+
     public int getAmountOfRows(String tableName) {
         int count = 0;
         String query = "SELECT COUNT(userID) FROM " + tableName;
