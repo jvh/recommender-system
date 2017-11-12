@@ -5,6 +5,12 @@ public class SQLiteConnection {
 
     public Connection connection = null;
 
+    // tableTo: Averages go to this new table
+    // tableFrom: Data to calculate averages/similarity from
+    public final String TABLE_TO_AVERAGE = "averageSetSmall";
+    public final String SIMILARITY_TABLE = "similaritySetSmall";
+    public final String TABLE_FROM = "testSetSmallUnix";
+
     public void connect() {
 
         try {
@@ -21,6 +27,7 @@ public class SQLiteConnection {
     public Connection getConnection() {
         return connection;
     }
+
 
     public int getAmountOfRows(String tableName) {
         int count = 0;
@@ -47,8 +54,46 @@ public class SQLiteConnection {
         }
     }
 
-    public HashMap<Integer, Double> getNeighbourSelection(int userID) {
-        HashMap<Integer, Double> resultMap = new HashMap<>();
+    public void startTransaction() {
+        try {
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void endTransaction() {
+        try {
+            System.out.println("bant");
+            connection.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    public void insertSimilarityMeasure(int userID, int itemID, float similarity, int amountRated) {
+
+        PreparedStatement preparedStatementInsert = null;
+        try {
+            String insert = "INSERT INTO " + SIMILARITY_TABLE + " VALUES (?,?,?,?)";
+
+            preparedStatementInsert = connection.prepareStatement(insert);
+//            preparedStatementInsert.setString(1, SIMILARITY_TABLE);
+            preparedStatementInsert.setInt(1, userID);
+            preparedStatementInsert.setInt(2, itemID);
+            preparedStatementInsert.setFloat(3, similarity);
+            preparedStatementInsert.setInt(4, amountRated);
+            preparedStatementInsert.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public HashMap<Integer, Float> getNeighbourSelection(int userID) {
+        HashMap<Integer, Float> resultMap = new HashMap<>();
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
         String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
@@ -57,7 +102,7 @@ public class SQLiteConnection {
             ResultSet resultSet = queryStatement.executeQuery(query);
             while(resultSet.next()) {
                 int userB = resultSet.getInt(1);
-                double similarityValue = resultSet.getDouble(2);
+                float similarityValue = resultSet.getFloat(2);
                 resultMap.put(userB, similarityValue);
 //                System.out.println(resultSet.getInt(1) + " " + resultSet.getDouble(2) + " " + resultSet.getInt(3));
             }
@@ -67,18 +112,27 @@ public class SQLiteConnection {
         return resultMap;
     }
 
-    public void insertPredictedRating(int userID, int itemID, double rating, String tableName) {
-        String update = "UPDATE " +  tableName + "  SET predictedRating = " + rating + " WHERE userID = " + userID + " AND itemID = " + itemID;
+    public void insertPredictedRating(int userID, int itemID, float rating) {
+
+        PreparedStatement preparedStatementUpdate = null;
         try {
-            Statement updateStatement = connection.createStatement();
-            updateStatement.executeUpdate(update);
+            String update = "UPDATE " + TABLE_FROM + " SET predictedRating =? WHERE userID = ? AND itemID = ?";
+
+//            String insert = "INSERT INTO " + TABLE_FROM + " (userID, itemID, predictedRating) VALUES (?,?,?)";
+
+            preparedStatementUpdate = connection.prepareStatement(update);
+            preparedStatementUpdate.setFloat(1, rating);
+            preparedStatementUpdate.setInt(2, userID);
+            preparedStatementUpdate.setInt(3, itemID);
+            preparedStatementUpdate.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public Double getNeighbourhoodRated(int userID, int itemID) {
-        String query = "SELECT realRating FROM trainingSET WHERE userID = " + userID + " AND itemID = " + itemID;
+        String query = "SELECT realRating FROM " + TABLE_FROM + " WHERE userID = " + userID + " AND itemID = " + itemID;
         double result = 0;
         try {
             Statement statement = connection.createStatement();
@@ -124,23 +178,22 @@ public class SQLiteConnection {
         return resultMap;
     }
 
-
-    public double getUserAverage(int userID) {
-        double average = 0;
+    public float getUserAverage(int userID) {
+        float average = 0;
         int resultCount = 0;
         try {
-            String query = "SELECT averageValue FROM averageSet WHERE userID=" + userID + " AND userID <> 0";
+            String query = "SELECT averageValue FROM " + TABLE_TO_AVERAGE + " WHERE userID=" + userID + " AND userID <> 0";
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             boolean empty = true;
             while(resultSet.next() ) {
-                average += resultSet.getDouble(1);
+                average += resultSet.getFloat(1);
                 resultCount++;
                 empty = false;
             }
 //
             if(empty) {
-                String queryOther = "SELECT realRating FROM trainingSet WHERE userID=" + userID + " AND userID <> 0";
+                String queryOther = "SELECT realRating FROM " + TABLE_FROM + " WHERE userID=" + userID + " AND userID <> 0";
                 Statement statementOther = connection.createStatement();
                 ResultSet resultSetOther = statementOther.executeQuery(queryOther);
                 while(resultSetOther.next()) {
@@ -148,7 +201,7 @@ public class SQLiteConnection {
                     resultCount++;
                 }
                 average = average / resultCount;
-                String insert = "INSERT INTO averageSet VALUES (" + userID + "," + average + ")";
+                String insert = "INSERT INTO " + TABLE_TO_AVERAGE + " VALUES (" + userID + "," + average + ")";
                 Statement insertStatement = connection.createStatement();
                 insertStatement.executeUpdate(insert);
 
@@ -185,23 +238,23 @@ public class SQLiteConnection {
         }
     }
 
-    public HashMap<Integer, HashMap<Integer, Double>> getTrainingSetToMemory(String tableName) {
+    public HashMap<Integer, HashMap<Integer, Float>> getTrainingSetToMemory() {
 
-        HashMap<Integer, HashMap<Integer, Double>> resultMap = new HashMap<>();
+        HashMap<Integer, HashMap<Integer, Float>> resultMap = new HashMap<>();
 
         try {
-            String query = "SELECT userID, itemID, realRating FROM " + tableName;
+            String query = "SELECT userID, itemID, realRating FROM " + TABLE_FROM;
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
-            HashMap<Integer, Double> itemRatingMap = new HashMap<>();
+            HashMap<Integer, Float> itemRatingMap = new HashMap<>();
             int tempUser = 1;
             while(resultSet.next()) {
                 if (tempUser != resultSet.getInt(1)) {
                     itemRatingMap = new HashMap<>();
                     tempUser = resultSet.getInt(1);
                 }
-                itemRatingMap.put(resultSet.getInt(2), resultSet.getDouble(3));
+                itemRatingMap.put(resultSet.getInt(2), resultSet.getFloat(3));
                 resultMap.put(resultSet.getInt(1), itemRatingMap);
 
             }
@@ -211,7 +264,6 @@ public class SQLiteConnection {
 
         return resultMap;
     }
-
 
     public void closeConnection() {
         try {
@@ -226,11 +278,11 @@ public class SQLiteConnection {
     public static void main(String[] args) {
         SQLiteConnection sqLiteConnection = new SQLiteConnection();
         sqLiteConnection.connect();
-        HashMap<Integer, HashMap<Integer, Double>> resultMap = sqLiteConnection.getTrainingSetToMemory("trainingSet");
-        for (int i = 1; i < resultMap.entrySet().size() && i < 100; i++ ) {
-            System.out.println(i + "," + resultMap.get(i));
+//        HashMap<Integer, HashMap<Integer, Double>> resultMap = sqLiteConnection.getTrainingSetToMemory("trainingSet");
+//        for (int i = 1; i < resultMap.entrySet().size() && i < 100; i++ ) {
+//            System.out.println(i + "," + resultMap.get(i));
 //        System.out.println(resultMap.get)
-        }
+//        }
 
 //        sqLiteConnection.getNeighbourhoodRated(1,62440);
 //        sqLiteConnection.getAmountOfRows("trainingSet");
@@ -249,7 +301,7 @@ public class SQLiteConnection {
 //        System.out.println(sqLiteConnection.getAmountOfRecords("trainingSet", 100));
 //        System.out.println(sqLiteConnection.getUserAverage("trainingSet", 1));
 //        )sqLiteConnection.getUserId("trainingSet", 1);
-        sqLiteConnection.closeConnection();
+//        sqLiteConnection.closeConnection();
 //        connect();
 //        getAmountOfRecords("minimalTestSet", 15);
 //        closeConnection();

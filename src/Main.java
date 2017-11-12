@@ -6,15 +6,16 @@ import java.util.HashMap;
 public class Main {
 
     public static void main(String[] args) {
-        UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering();
         SQLiteConnection sql = new SQLiteConnection();
-        sql.connect();
+        UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering(sql);
         //  Testing out if the similaritymeasure works
 //        ubcf.similarityMeasure(1,1);
 
 //        ubcf.calculatePredictedRating(9, 11);
 
-        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory("trainingSet"));
+        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory());
+        ubcf.
+//        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory("trainingSet"));
         sql.closeConnection();
 //        Main m = new Main();
 

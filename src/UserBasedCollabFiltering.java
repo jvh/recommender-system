@@ -8,31 +8,40 @@ import java.util.HashMap;
  */
 public class UserBasedCollabFiltering {
 
-    SQLiteConnection sql = new SQLiteConnection();
+    SQLiteConnection sql;
+    public UserBasedCollabFiltering(SQLiteConnection sql) {
+        this.sql = sql;
+        sql.connect();
+    }
+
+
     //The size of the batches before inserting into the DB
-    public static final int BATCH_SIZE = 1000;
+    public static final int BATCH_SIZE = 3;
 
-    public void calculateSimilarRated(HashMap<Integer,HashMap<Integer,Double>> map) {
-        HashMap<Integer, HashMap<Integer, Double>> resultMap = new HashMap<>();
+    public void calculateSimilarRated(HashMap<Integer,HashMap<Integer,Float>> map) {
+        int amountCalculated = 0;
 
-        HashMap<Integer, Double> currentUserRating;
+        sql.startTransaction();
+        HashMap<Integer, Float> currentUserRating;
         for (int i = 1; i < map.entrySet().size() ; i++) {
             currentUserRating = map.get(i);
 
-            for (int j = i + 1 ; j < map.entrySet().size() ; j++) {
-                HashMap<Integer, Double> mapJ = map.get(j);
+            for (int j = i + 1 ; j <= map.entrySet().size() ; j++) {
+                HashMap<Integer, Float> mapJ = map.get(j);
 
-                double topLine = 0;
-                double userACalc = 0;
-                double userBCalc = 0;
+                float topLine = 0;
+                float userACalc = 0;
+                float userBCalc = 0;
                 boolean similarityExists = false;
+                int similarItemsRated = 0;
 
                 for (int key : mapJ.keySet()) {
                     if (currentUserRating.containsKey(key)) {
+                        similarItemsRated++;
                         similarityExists = true;
                         System.out.println(i);
-                        double first = currentUserRating.get(key) - sql.getUserAverage(i);
-                        double second = mapJ.get(key) - sql.getUserAverage(j);
+                        float first = currentUserRating.get(key) - sql.getUserAverage(i);
+                        float second = mapJ.get(key) - sql.getUserAverage(j);
 
                         topLine += (first * second);
                         userACalc += Math.pow(first, 2);
@@ -40,12 +49,26 @@ public class UserBasedCollabFiltering {
                     }
                 }
                 if(similarityExists) {
-                    double bottomLine = Math.sqrt(userACalc) * Math.sqrt(userBCalc);
-                    double similarity = (topLine / bottomLine);
+                    float bottomLine = (float) (Math.sqrt(userACalc) * Math.sqrt(userBCalc));
+                    float similarity = (topLine / bottomLine);
+                    amountCalculated += 1;
 
+                    // Insert one value into the transaction block to insert
+                    sql.insertSimilarityMeasure(i, j, similarity, similarItemsRated);
 
-                    System.out.println("User A: " + i + " User B: " + j + " Similarity: " + similarity);
+                    // Have 1000 items been calculated or has it reached the end of the table
+                    if (amountCalculated % BATCH_SIZE == 0 || (i == map.entrySet().size()-1 && j == map.entrySet().size())) {
+                        sql.endTransaction();
+
+//                         If it hasn't reached the end, start a new transaction
+                        if (!(i == map.entrySet().size()-1 && j == map.entrySet().size())) {
+                            sql.startTransaction();
+                        }
+
+                    }
+
                 }
+
 
             }
 
@@ -53,7 +76,6 @@ public class UserBasedCollabFiltering {
 
 
     }
-
 
     //Works out the similarities between the users
     public void similarityMeasure() {
@@ -149,22 +171,22 @@ public class UserBasedCollabFiltering {
     }
 
     // Works out predicted rating for two users
-    public void calculatePredictedRating(int userA, int itemB) {
+    public void calculatePredictedRating(int user, int item) {
         sql.connect();
         //TODO Needs to check if user has actually rated item, if so don't calculate
-        HashMap<Integer, Double> neighbourMap = sql.getNeighbourSelection(userA);
-        double meanA = sql.getUserAverage(userA);
-        Double top = 0.0;
-        Double bottom = 0.0;
-        for(HashMap.Entry<Integer, Double> entry : neighbourMap.entrySet()) {
+        HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);
+        float meanA = sql.getUserAverage(user);
+        float top = 0.0f;
+        float bottom = 0.0f;
+        for(HashMap.Entry<Integer, Float> entry : neighbourMap.entrySet()) {
             int userNew = entry.getKey();
-            double similarity = entry.getValue();
-            top += similarity * (sql.getNeighbourhoodRated(userNew, itemB) - sql.getUserAverage(userNew));
+            float similarity = entry.getValue();
+            top += similarity * (sql.getNeighbourhoodRated(userNew, item) - sql.getUserAverage(userNew));
             bottom += similarity;
         }
-        double rating = meanA + (top/bottom);
+        float rating = meanA + (top/bottom);
 //        System.out.println(meanA + (top/bottom));
-        sql.insertPredictedRating(userA, itemB, rating, "testSet1");
+        sql.insertPredictedRating(user, item, rating);
         sql.closeConnection();
 
     }
