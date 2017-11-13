@@ -7,7 +7,7 @@ public class SQLiteConnection {
     public Connection connection = null;
 
     // tableTo: Averages go to this new table
-    public final String TABLE_TO_AVERAGE = "averageSet";
+    public final String TABLE_TO_AVERAGE = "averageSet1";
 
     // Stores similarity values for userA and userB
     public final String SIMILARITY_TABLE = "similaritySet";
