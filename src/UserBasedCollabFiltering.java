@@ -1,5 +1,3 @@
-import com.sun.xml.internal.bind.v2.TODO;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -16,19 +14,38 @@ public class UserBasedCollabFiltering {
 
 
     //The size of the batches before inserting into the DB
-    public static final int BATCH_SIZE = 3;
+    public static final int BATCH_SIZE = 1000;
 
     public void calculateSimilarRated(HashMap<Integer,HashMap<Integer,Float>> map) {
         int amountCalculated = 0;
 
         sql.startTransaction();
         HashMap<Integer, Float> currentUserRating;
-        for (int i = 1; i < map.entrySet().size() ; i++) {
+
+        int start_i = 1;
+        int start_j = start_i;
+
+        // Last record entered:
+        ArrayList<Integer> lastRecord = sql.getLastRecordFromSimilarityTable();
+        if (!lastRecord.isEmpty() || (lastRecord.get(1) + 1 > map.entrySet().size())) {
+
+            if (lastRecord.get(1) + 1 > map.entrySet().size()) { // If its the last entry for userA
+                start_i++;
+                start_j = start_i;
+
+            } else {
+                start_i = lastRecord.get(0);
+                start_j = lastRecord.get(1);
+            }
+
+        }
+
+        for (int i = start_i; i < map.entrySet().size() ; i++) {
             currentUserRating = map.get(i);
 
             // Has the user rated some item(s)
             if (currentUserRating.size() > 0) {
-                for (int j = i + 1; j <= map.entrySet().size(); j++) {
+                for (int j = start_j + 1; j <= map.entrySet().size(); j++) {
                     HashMap<Integer, Float> mapJ = map.get(j);
 
                     float topLine = 0;
@@ -41,7 +58,7 @@ public class UserBasedCollabFiltering {
                         if (currentUserRating.containsKey(key)) {
                             similarItemsRated++;
                             similarityExists = true;
-                            System.out.println(i);
+//                            System.out.println(i);
                             float first = currentUserRating.get(key) - sql.getUserAverage(i);
                             float second = mapJ.get(key) - sql.getUserAverage(j);
 
@@ -53,7 +70,7 @@ public class UserBasedCollabFiltering {
                     if (similarityExists) {
                         float bottomLine = (float) (Math.sqrt(userACalc) * Math.sqrt(userBCalc));
                         try {
-                            if (!Float.isNaN(bottomLine)) {
+                            if (Float.isNaN(bottomLine)) {
                                 throw new NumberFormatException();
 
                             } else {
@@ -80,6 +97,7 @@ public class UserBasedCollabFiltering {
                         }
                     }
                 }
+                start_j = i; // Reset the counter for a new person
             }
 
         }

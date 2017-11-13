@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class SQLiteConnection {
@@ -6,13 +7,13 @@ public class SQLiteConnection {
     public Connection connection = null;
 
     // tableTo: Averages go to this new table
-    public final String TABLE_TO_AVERAGE = "averageSetSmall";
+    public final String TABLE_TO_AVERAGE = "averageSet";
 
     // Stores similarity values for userA and userB
-    public final String SIMILARITY_TABLE = "similaritySetSmall";
+    public final String SIMILARITY_TABLE = "similaritySet";
 
     // TrainingSet or the table with the known ratings
-    public final String TABLE_FROM = "testSetSmallUnix";
+    public final String TABLE_FROM = "trainingSet";
 
     // Table to write the predictions to / with unknown ratings
     public final String PREDICTED_RATING_TABLE = "predictedSmallSet";
@@ -64,6 +65,26 @@ public class SQLiteConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public ArrayList<Integer> getLastRecordFromSimilarityTable() {
+//        String query = "SELECT userA, userB FROM " + SIMILARITY_TABLE + " ORDER BY column DESC LIMIT 1";
+        String query = "SELECT userA, userB FROM " + SIMILARITY_TABLE + " WHERE similarityValue IS NOT NULL ORDER BY userA DESC, userB DESC LIMIT 1";
+        ArrayList<Integer> record = new ArrayList<>();
+//        HashMap<Integer, Integer> record = new HashMap<>();
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            while(resultSet.next()) {
+                record.add(0, resultSet.getInt(1));
+                record.add(1, resultSet.getInt(2));
+//                record.put(resultSet.getInt(1), resultSet.getInt(2));
+//                count = resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return record;
     }
 
     public void insertSimilarityMeasure(int userID, int itemID, float similarity, int amountRated) {
@@ -194,7 +215,7 @@ public class SQLiteConnection {
             }
 //
             if(empty) {
-                String queryOther = "SELECT realRating FROM " + TABLE_FROM + " WHERE userID=" + userID + " AND userID <> 0";
+                String queryOther = "SELECT rating FROM " + TABLE_FROM + " WHERE userID=" + userID + " AND userID <> 0";
                 Statement statementOther = connection.createStatement();
                 ResultSet resultSetOther = statementOther.executeQuery(queryOther);
                 while(resultSetOther.next()) {
