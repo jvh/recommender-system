@@ -7,21 +7,23 @@ public class SQLiteConnection {
     public Connection connection = null;
 
     // tableTo: Averages go to this new table
-    public final String TABLE_TO_AVERAGE = "averageSet1";
+    public final String AVERAGE_TABLE = "averageSet1";
 
     // Stores similarity values for userA and userB
     public final String SIMILARITY_TABLE = "similaritySet";
 
     // TrainingSet or the table with the known ratings
-    public final String TABLE_FROM = "trainingSet";
+    public final String TRAINING_SET = "trainingSet";
 
     // Table to write the predictions to / with unknown ratings
     public final String PREDICTED_RATING_TABLE = "predictedSmallSet";
 
+    public final String DB_URL = "jdbc:sqlite:datasets.db";
+
     public void connect() {
 
         try {
-            String url = "jdbc:sqlite:datasets.db";
+            String url = DB_URL;
             connection = DriverManager.getConnection(url);
             System.out.println("Connection established");
 
@@ -140,7 +142,7 @@ public class SQLiteConnection {
         try {
             String update = "UPDATE " + PREDICTED_RATING_TABLE + " SET predictedRating =? WHERE userID = ? AND itemID = ?";
 
-//            String insert = "INSERT INTO " + TABLE_FROM + " (userID, itemID, predictedRating) VALUES (?,?,?)";
+//            String insert = "INSERT INTO " + TRAINING_SET + " (userID, itemID, predictedRating) VALUES (?,?,?)";
 
             preparedStatementUpdate = connection.prepareStatement(update);
             preparedStatementUpdate.setFloat(1, rating);
@@ -154,7 +156,7 @@ public class SQLiteConnection {
     }
 
     public Double getNeighbourhoodRated(int userID, int itemID) {
-        String query = "SELECT rating FROM " + TABLE_FROM + " WHERE userID = " + userID + " AND itemID = " + itemID;
+        String query = "SELECT rating FROM " + TRAINING_SET + " WHERE userID = " + userID + " AND itemID = " + itemID;
         double result = 0;
         try {
             Statement statement = connection.createStatement();
@@ -204,7 +206,7 @@ public class SQLiteConnection {
         float average = 0;
         int resultCount = 0;
         try {
-            String query = "SELECT averageValue FROM " + TABLE_TO_AVERAGE + " WHERE userID=" + userID + " AND userID <> 0";
+            String query = "SELECT averageValue FROM " + AVERAGE_TABLE + " WHERE userID=" + userID + " AND userID <> 0";
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             boolean empty = true;
@@ -215,7 +217,7 @@ public class SQLiteConnection {
             }
 //
             if(empty) {
-                String queryOther = "SELECT rating FROM " + TABLE_FROM + " WHERE userID=" + userID + " AND userID <> 0";
+                String queryOther = "SELECT rating FROM " + TRAINING_SET + " WHERE userID=" + userID + " AND userID <> 0";
                 Statement statementOther = connection.createStatement();
                 ResultSet resultSetOther = statementOther.executeQuery(queryOther);
                 while(resultSetOther.next()) {
@@ -223,7 +225,7 @@ public class SQLiteConnection {
                     resultCount++;
                 }
                 average = average / resultCount;
-                String insert = "INSERT INTO " + TABLE_TO_AVERAGE + " VALUES (" + userID + "," + average + ")";
+                String insert = "INSERT INTO " + AVERAGE_TABLE + " VALUES (" + userID + "," + average + ")";
                 Statement insertStatement = connection.createStatement();
                 insertStatement.executeUpdate(insert);
 
@@ -266,7 +268,7 @@ public class SQLiteConnection {
 
         try {
 
-            String query = "SELECT userID, itemID, predictedRating FROM " + tableName;
+            String query = "SELECT userID, itemID, rating FROM " + tableName;
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
