@@ -8,7 +8,8 @@ public class Main {
         UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering(sql);
 //        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory("testSetSmallUnix"));
 //        ubcf.calculatePredictedRating(sql.getTrainingSetToMemory("testSetSmallUnix"));
-        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory("trainingSet"));
+        ubcf.computeAllAverages(sql.getTrainingSetToMemory("trainingSet"));
+//        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory("trainingSet"));
         //  Testing out if the similarity measure works
 //        ubcf.calculatePredictedRating(sql.getTrainingSetToMemory("predictedSmallSet"), "testSetSmallUnix");
         sql.closeConnection();

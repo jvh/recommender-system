@@ -246,6 +246,7 @@ public class UserBasedCollabFiltering {
                 }
             }
         }
+
 //        //TODO Needs to check if user has actually rated item, if so don't calculate
 //        HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);
 //        float meanA = sql.getUserAverage(user);
@@ -261,6 +262,22 @@ public class UserBasedCollabFiltering {
 ////        System.out.println(meanA + (top/bottom));
 //        sql.insertPredictedRating(user, item, rating);
 //        sql.closeConnection();
+
+    }
+
+    public void computeAllAverages(HashMap<Integer,HashMap<Integer,Float>> map) {
+        sql.startTransaction();
+        for (int i = 1; i <= map.entrySet().size() ; i++) {
+            sql.computeAverageForUser(i);
+            if (i % 1000 == 0 || (i == map.entrySet().size())) {
+                sql.endTransaction();
+
+                if (!(i == map.entrySet().size())) {
+                    sql.startTransaction();
+                }
+            }
+
+        }
 
     }
 

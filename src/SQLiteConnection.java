@@ -237,6 +237,39 @@ public class SQLiteConnection {
         return average;
     }
 
+    public void computeAverageForUser(int userID) {
+        float average = 0;
+        int resultCount = 0;
+        PreparedStatement preparedStatementInsert = null;
+        try {
+            String query = "SELECT rating FROM " + TABLE_FROM + " WHERE userID=" + userID + " AND userID <> 0";
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            while(resultSet.next()) {
+                average += resultSet.getFloat(1);
+                resultCount++;
+            }
+            average = average / resultCount;
+
+            String insert = "INSERT INTO " + TABLE_TO_AVERAGE + " VALUES (?,?)";
+
+
+            preparedStatementInsert = connection.prepareStatement(insert);
+//            preparedStatementInsert.setString(1, SIMILARITY_TABLE);
+            preparedStatementInsert.setInt(1, userID);
+            preparedStatementInsert.setFloat(2, average);
+            preparedStatementInsert.executeUpdate();
+
+
+//            String insert = "INSERT INTO " + TABLE_TO_AVERAGE + " VALUES (" + userID + "," + average + ")";
+//            Statement insertStatement = connection.createStatement();
+//            insertStatement.executeUpdate(insert);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public void createTestDatabase(String tableName, int size) {
         String create = "CREATE TABLE " + tableName + " (userID INTEGER, itemID INTEGER, realRating REAL, predictedRating REAL)";
         String insert = "INSERT INTO " + tableName + " SELECT * FROM trainingSet LIMIT " + size;
