@@ -6,12 +6,16 @@ public class Main {
     public static void main(String[] args) {
         SQLiteConnection sql = new SQLiteConnection();
         UserBasedCollabFiltering ubcf = new UserBasedCollabFiltering(sql);
-//        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory("testSetSmallUnix"));
-//        ubcf.calculatePredictedRating(sql.getTrainingSetToMemory("testSetSmallUnix"));
-        ubcf.computeAllAverages(sql.getTrainingSetToMemory("trainingSet"));
-//        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory("trainingSet"));
-        //  Testing out if the similarity measure works
-//        ubcf.calculatePredictedRating(sql.getTrainingSetToMemory("predictedSmallSet"), "testSetSmallUnix");
+
+        //STEP 1: Computes the average for all given users
+//        ubcf.computeAllAverages(sql.getTrainingSetToMemory(SQLiteConnection.TRAINING_SET));
+
+        //STEP 2: Computes the similarities between the users from the trainingSet
+//        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory(SQLiteConnection.TRAINING_SET));
+
+        //STEP 3: Computes the predicted ratings for the users given the similarities
+        ubcf.calculatePredictedRating(sql.getTrainingSetToMemory(SQLiteConnection.PREDICTED_RATING_TABLE));
+
         sql.closeConnection();
     }
 

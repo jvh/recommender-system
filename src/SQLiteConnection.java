@@ -7,18 +7,18 @@ public class SQLiteConnection {
     public Connection connection = null;
 
     // tableTo: Averages go to this new table
-    public final String AVERAGE_TABLE = "averageSet1";
+    public static final String AVERAGE_TABLE = "averageSet1";
 
     // Stores similarity values for userA and userB
-    public final String SIMILARITY_TABLE = "similaritySet";
+    public static final String SIMILARITY_TABLE = "similaritySet";
 
     // TrainingSet or the table with the known ratings
-    public final String TRAINING_SET = "trainingSet";
+    public static final String TRAINING_SET = "trainingSet";
 
     // Table to write the predictions to / with unknown ratings
-    public final String PREDICTED_RATING_TABLE = "predictedSmallSet";
+    public static final String PREDICTED_RATING_TABLE = "predictedSet";
 
-    public final String DB_URL = "jdbc:sqlite:datasets.db";
+    public static final String DB_URL = "jdbc:sqlite:datasets.db";
 
     public void connect() {
 
@@ -38,14 +38,14 @@ public class SQLiteConnection {
     }
 
 
-    public int getAmountOfRows(String tableName) {
-        int count = 0;
-        String query = "SELECT COUNT(userID) FROM " + tableName;
+    public long getAmountOfRows(String tableName, String columnName) {
+        long count = 0;
+        String query = "SELECT COUNT(" + columnName + ") FROM " + tableName;
         try {
             Statement queryStatement = connection.createStatement();
             ResultSet resultSet = queryStatement.executeQuery(query);
             while(resultSet.next()) {
-                count = resultSet.getInt(1);
+                count = resultSet.getLong(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -92,6 +92,7 @@ public class SQLiteConnection {
     public void insertSimilarityMeasure(int userID, int itemID, float similarity, int amountRated) {
 
         PreparedStatement preparedStatementInsert = null;
+
         try {
             String insert = "INSERT INTO " + SIMILARITY_TABLE + " VALUES (?,?,?,?)";
 
@@ -105,13 +106,20 @@ public class SQLiteConnection {
 
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            try { if (preparedStatementInsert != null) preparedStatementInsert.close(); } catch (Exception e) {};
         }
     }
 
+    //Gets the neighbours for userA if user is in either column userA or column userB (it doesn't matter which one). The neighbours are selected based on if they have a similarity of at least 0.5 else they are not selected.
     public HashMap<Integer, Float> getNeighbourSelection(int userID) {
         HashMap<Integer, Float> resultMap = new HashMap<>();
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
+
+
+        // REMOVE orderby -- perhaps
+        // Both treshold and the limitation (say up to 20) of users who have a postiive correlation of >0.5, if no users exist (or few) then use the average instead as this will liekly produce better predictions
         String query = "SELECT * FROM " + SIMILARITY_TABLE + " WHERE userA = " + userID + " OR userB = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
 //        String query2 = "SELECT userA, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE userB = " + userID + " OR userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 JOIN ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
 
@@ -140,7 +148,7 @@ public class SQLiteConnection {
 
         PreparedStatement preparedStatementUpdate = null;
         try {
-            String update = "UPDATE " + PREDICTED_RATING_TABLE + " SET predictedRating =? WHERE userID = ? AND itemID = ?";
+            String update = "UPDATE " + PREDICTED_RATING_TABLE + " SET rating =? WHERE userID = ? AND itemID = ?";
 
 //            String insert = "INSERT INTO " + TRAINING_SET + " (userID, itemID, predictedRating) VALUES (?,?,?)";
 
@@ -172,6 +180,7 @@ public class SQLiteConnection {
 
     public HashMap<Integer, String> similarityValues(int userA, int userB) {
         HashMap<Integer, String> resultMap = new HashMap<>();
+        ResultSet resultSet = null;
 
         try {
 
@@ -181,7 +190,7 @@ public class SQLiteConnection {
 //            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID BETWEEN 1 AND 1000 GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID BETWEEN 1 AND 1000 ORDER BY userID";
 
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
+            resultSet = statement.executeQuery(query);
 
             while(resultSet.next()) {
 //                System.out.println(resultSet.getInt(1));
@@ -198,17 +207,20 @@ public class SQLiteConnection {
 
         } catch (SQLException e) {
             e.printStackTrace();
+
         }
         return resultMap;
     }
 
     public float getUserAverage(int userID) {
+        ResultSet resultSet = null;
+        Statement statement = null;
         float average = 0;
         int resultCount = 0;
         try {
             String query = "SELECT averageValue FROM " + AVERAGE_TABLE + " WHERE userID=" + userID + " AND userID <> 0";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(query);
             boolean empty = true;
             while(resultSet.next() ) {
                 average += resultSet.getFloat(1);
@@ -235,7 +247,12 @@ public class SQLiteConnection {
 
         } catch (SQLException e) {
             e.printStackTrace();
+
+        } finally {
+            try { if (resultSet != null) resultSet.close(); } catch (Exception e) {};
+            try { if (statement != null) statement.close(); } catch (Exception e) {};
         }
+
         return average;
     }
 
@@ -244,7 +261,7 @@ public class SQLiteConnection {
         int resultCount = 0;
         PreparedStatement preparedStatementInsert = null;
         try {
-            String query = "SELECT rating FROM " + TABLE_FROM + " WHERE userID=" + userID + " AND userID <> 0";
+            String query = "SELECT rating FROM " + TRAINING_SET + " WHERE userID=" + userID + " AND userID <> 0";
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             while(resultSet.next()) {
@@ -253,7 +270,7 @@ public class SQLiteConnection {
             }
             average = average / resultCount;
 
-            String insert = "INSERT INTO " + TABLE_TO_AVERAGE + " VALUES (?,?)";
+            String insert = "INSERT INTO " + AVERAGE_TABLE + " VALUES (?,?)";
 
 
             preparedStatementInsert = connection.prepareStatement(insert);
@@ -298,29 +315,76 @@ public class SQLiteConnection {
     public HashMap<Integer, HashMap<Integer, Float>> getTrainingSetToMemory(String tableName) {
 
         HashMap<Integer, HashMap<Integer, Float>> resultMap = new HashMap<>();
+        ResultSet resultSet = null;
+        Statement statement = null;
 
         try {
 
             String query = "SELECT userID, itemID, rating FROM " + tableName;
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(query);
 
             HashMap<Integer, Float> itemRatingMap = new HashMap<>();
             int tempUser = 1;
             while(resultSet.next()) {
-                if (tempUser != resultSet.getInt(1)) {
+                int currentID = resultSet.getInt(1);
+                if (resultMap.containsKey(currentID)) {
+                    itemRatingMap = resultMap.get(currentID);
+
+                } else {
                     itemRatingMap = new HashMap<>();
-                    tempUser = resultSet.getInt(1);
+
+
+
                 }
+//                //if the user currently being looked at isn't the next one (row) in the training set
+//                if (tempUser != resultSet.getInt(1)) {
+//                    //If the user already has an item map don't make another itemMap for that user
+//                    if (!resultMap.containsKey(resultSet.getInt(1))) {
+//                        itemRatingMap = new HashMap<>();
+//                    }
+//                    tempUser = resultSet.getInt(1);
+//
+//                }
                 itemRatingMap.put(resultSet.getInt(2), resultSet.getFloat(3));
                 resultMap.put(resultSet.getInt(1), itemRatingMap);
 
             }
         } catch (SQLException e) {
             e.printStackTrace();
+
+        } finally {
+            try { if (resultSet != null) resultSet.close(); } catch (Exception e) {};
+            try { if (statement != null) statement.close(); } catch (Exception e) {};
         }
 
         return resultMap;
+    }
+
+    public HashMap<Integer, Float> getAveragesToMemory() {
+
+        HashMap<Integer, Float> averageMap = new HashMap<>();
+        ResultSet resultSet = null;
+        Statement statement = null;
+
+        try {
+
+            String query = "SELECT userID, averageValue FROM " + AVERAGE_TABLE;
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(query);
+
+            while(resultSet.next()) {
+                averageMap.put(resultSet.getInt(1), resultSet.getFloat(2));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+        } finally {
+            try { if (resultSet != null) resultSet.close(); } catch (Exception e) {};
+            try { if (statement != null) statement.close(); } catch (Exception e) {};
+        }
+
+        return averageMap;
     }
 
     public void closeConnection() {
