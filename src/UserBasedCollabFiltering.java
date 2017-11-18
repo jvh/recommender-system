@@ -27,8 +27,7 @@ public class UserBasedCollabFiltering {
 
         // Last record entered:
         ArrayList<Integer> lastRecord = sql.getLastRecordFromSimilarityTable();
-        if (!lastRecord.isEmpty() || (lastRecord.get(1) + 1 > map.entrySet().size())) {
-
+        if (!lastRecord.isEmpty()) {
             if (lastRecord.get(1) + 1 > map.entrySet().size()) { // If its the last entry for userA
                 start_i++;
                 start_j = start_i;
@@ -54,8 +53,10 @@ public class UserBasedCollabFiltering {
                     boolean similarityExists = false;
                     int similarItemsRated = 0;
 
+
                     for (int key : mapJ.keySet()) {
                         if (currentUserRating.containsKey(key)) {
+
                             similarItemsRated++;
                             similarityExists = true;
 //                            System.out.println(i);
