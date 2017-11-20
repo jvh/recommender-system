@@ -351,6 +351,55 @@ public class SQLiteConnection {
         return resultMap;
     }
 
+    public HashMap<Integer, HashMap<Integer, Float>> getTrainingSetToMemoryIBCF(String tableName) {
+        HashMap<Integer, HashMap<Integer, Float>> resultMap = new HashMap<>();
+        ResultSet resultSet = null;
+        Statement statement = null;
+
+        try {
+
+            String query = "SELECT userID, itemID, rating FROM " + tableName;
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(query);
+
+            HashMap<Integer, Float> itemRatingMap = new HashMap<>();
+            int tempUser = 1;
+            while(resultSet.next()) {
+                int currentID = resultSet.getInt(1);
+                if (resultMap.containsKey(currentID)) {
+                    itemRatingMap = resultMap.get(currentID);
+
+                } else {
+                    itemRatingMap = new HashMap<>();
+
+
+
+                }
+//                //if the user currently being looked at isn't the next one (row) in the training set
+//                if (tempUser != resultSet.getInt(1)) {
+//                    //If the user already has an item map don't make another itemMap for that user
+//                    if (!resultMap.containsKey(resultSet.getInt(1))) {
+//                        itemRatingMap = new HashMap<>();
+//                    }
+//                    tempUser = resultSet.getInt(1);
+//
+//                }
+                itemRatingMap.put(resultSet.getInt(2), resultSet.getFloat(3));
+                resultMap.put(resultSet.getInt(1), itemRatingMap);
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+        } finally {
+            try { if (resultSet != null) resultSet.close(); } catch (Exception e) {};
+            try { if (statement != null) statement.close(); } catch (Exception e) {};
+        }
+
+        return resultMap;
+    }
+
+
     public HashMap<Integer, HashMap<Integer, Float>> getTrainingSetToMemory(String tableName) {
 
         HashMap<Integer, HashMap<Integer, Float>> resultMap = new HashMap<>();
