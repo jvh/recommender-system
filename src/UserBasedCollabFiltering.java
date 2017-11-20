@@ -16,7 +16,11 @@ public class UserBasedCollabFiltering {
 
 
     //The size of the batches before inserting into the DB
-    public static final int BATCH_SIZE = 2;
+    public static final int BATCH_SIZE = 50000;
+
+    public static final int PREDICTION_BATCH_SIZE = 1000;
+
+
 
     public void calculateSimilarRated(HashMap<Integer,HashMap<Integer,Float>> map) {
         //Keeps count of the amount of similarities which have been successfully calculated
@@ -102,7 +106,7 @@ public class UserBasedCollabFiltering {
                             }
 
                         } catch (NumberFormatException e) {
-                            System.err.println("user A: " + i + " user B: " + j + " has encountered a NaN exception");
+//                            System.err.println("user A: " + i + " user B: " + j + " has encountered a NaN exception");
 
                             //Regardless if there is a NaN exception this will execute and allow the transaction to end and it to be placed into the DB
                         } finally {
@@ -222,19 +226,25 @@ public class UserBasedCollabFiltering {
 //    }
 
     // Works out predicted rating for two users. map represents the predictedSet
-    public void calculatePredictedRating(HashMap<Integer,HashMap<Integer,Float>> map) {
+    public void calculatePredictedRating(HashMap<Integer,ArrayList<Integer>> map) {
         long amountCalculated = 0;
         //The amount of users which have been processed regardless if they have/haven't got any shared item similarities (cold start problem)
         long rowsProcessed = 0;
         long numberOfRows = sql.getAmountOfRows(SQLiteConnection.PREDICTED_RATING_TABLE, "userID");
         // Training set which can be used to find the items which the neighbours have rated
         HashMap<Integer,HashMap<Integer,Float>> trainingSet = sql.getTrainingSetToMemory(SQLiteConnection.TRAINING_SET);
+
+        //Get averages in memory:
+        HashMap<Integer, Float> averagesMap = sql.getAveragesToMemory();
+
         sql.startTransaction();
+
         for (int user: map.keySet()) {
-            HashMap<Integer, Float> itemMap = map.get(user);
-            for (int item : itemMap.keySet()) {
+            ArrayList<Integer> itemList = map.get(user);
+//            HashMap<Integer, Float> itemMap = map.get(user);
+            for (int item : itemList) {
                 HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);
-                float meanA = sql.getUserAverage(user);
+                float meanA = averagesMap.get(user);
                 float top = 0.0f;
                 float bottom = 0.0f;
                 boolean neighbourhoodItemValid = false;
@@ -249,7 +259,7 @@ public class UserBasedCollabFiltering {
                         float rating = trainingSet.get(userNew).get(item);
 
                         float similarity = entry.getValue();
-                        top += similarity * (rating - sql.getUserAverage(userNew));
+                        top += similarity * (rating - averagesMap.get(userNew));
 //                        top += similarity * (sql.getNeighbourhoodRated(userNew, user) - sql.getUserAverage(userNew));
                         bottom += similarity;
                         neighbourhoodItemValid = true;
@@ -265,9 +275,9 @@ public class UserBasedCollabFiltering {
                     amountCalculated++;
                 } else {
                     // If the user doesn't have any suitable neighbours then we simply insert the average value given by that user
-                    sql.insertPredictedRating(user, item, sql.getUserAverage(user));
+                    sql.insertPredictedRating(user, item, averagesMap.get(user));
                 }
-                if (amountCalculated % BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
+                if (amountCalculated % PREDICTION_BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
                     sql.endTransaction();
 
                     if (rowsProcessed != numberOfRows) {

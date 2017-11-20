@@ -10,13 +10,13 @@ public class SQLiteConnection {
     public static final String AVERAGE_TABLE = "averageSet1";
 
     // Stores similarity values for userA and userB
-    public static final String SIMILARITY_TABLE = "similaritySet";
+    public static final String SIMILARITY_TABLE = "similaritySet2";
 
     // TrainingSet or the table with the known ratings
     public static final String TRAINING_SET = "trainingSet";
 
     // Table to write the predictions to / with unknown ratings
-    public static final String PREDICTED_RATING_TABLE = "predictedSet";
+    public static final String PREDICTED_RATING_TABLE = "predictionSet";
 
     public static final String DB_URL = "jdbc:sqlite:datasets.db";
 
@@ -310,6 +310,45 @@ public class SQLiteConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public HashMap<Integer, ArrayList<Integer>> getPredictionSetToMemory(String tableName) {
+
+        HashMap<Integer, ArrayList<Integer>> resultMap = new HashMap<>();
+        ResultSet resultSet = null;
+        Statement statement = null;
+
+        try {
+
+            String query = "SELECT userID, itemID FROM " + tableName;
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(query);
+
+            ArrayList<Integer> itemList = new ArrayList<>();
+
+            int tempUser = 1;
+            while(resultSet.next()) {
+                int currentID = resultSet.getInt(1);
+                if (resultMap.containsKey(currentID)) {
+                    itemList = resultMap.get(currentID);
+
+                } else {
+                    itemList = new ArrayList<>();
+
+                }
+                itemList.add(resultSet.getInt(2));
+                resultMap.put(resultSet.getInt(1), itemList);
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+        } finally {
+            try { if (resultSet != null) resultSet.close(); } catch (Exception e) {};
+            try { if (statement != null) statement.close(); } catch (Exception e) {};
+        }
+
+        return resultMap;
     }
 
     public HashMap<Integer, HashMap<Integer, Float>> getTrainingSetToMemory(String tableName) {

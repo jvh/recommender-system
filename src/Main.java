@@ -14,7 +14,7 @@ public class Main {
 //        ubcf.calculateSimilarRated(sql.getTrainingSetToMemory(SQLiteConnection.TRAINING_SET));
 
         //STEP 3: Computes the predicted ratings for the users given the similarities
-        ubcf.calculatePredictedRating(sql.getTrainingSetToMemory(SQLiteConnection.PREDICTED_RATING_TABLE));
+        ubcf.calculatePredictedRating(sql.getPredictionSetToMemory(SQLiteConnection.PREDICTED_RATING_TABLE));
 
         sql.closeConnection();
     }
