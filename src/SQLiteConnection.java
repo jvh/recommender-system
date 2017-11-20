@@ -112,15 +112,18 @@ public class SQLiteConnection {
     }
 
     //Gets the neighbours for userA if user is in either column userA or column userB (it doesn't matter which one). The neighbours are selected based on if they have a similarity of at least 0.5 else they are not selected.
-    public HashMap<Integer, Float> getNeighbourSelection(int userID) {
+    public HashMap<Integer, Float> getNeighbourSelection(int userID, int itemID) {
         HashMap<Integer, Float> resultMap = new HashMap<>();
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
 
+        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE (userA=" + userID + " AND userB IN (SELECT userID FROM " + TRAINING_SET + " WHERE itemID=" + itemID + ") OR userB=" + userID + " AND userA IN (SELECT userID FROM " + TRAINING_SET + " WHERE itemID=" + itemID + "))  AND similarityValue > 0 AND similarItemsAmount >= 1";
+//        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE " + userID + " IN (userA, userB) AND EXISTS (SELECT userID FROM " + TRAINING_SET + " WHERE userID IN (userA, userB) AND itemID=" + itemID + ") AND similarityValue > 0 and similarItemsAmount > 1";
+
 
         // REMOVE orderby -- perhaps
         // Both treshold and the limitation (say up to 20) of users who have a postiive correlation of >0.5, if no users exist (or few) then use the average instead as this will liekly produce better predictions
-        String query = "SELECT * FROM " + SIMILARITY_TABLE + " WHERE userA = " + userID + " OR userB = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
+//        String query = "SELECT * FROM " + SIMILARITY_TABLE + " WHERE userA = " + userID + " OR userB = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
 //        String query2 = "SELECT userA, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE userB = " + userID + " OR userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 JOIN ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
 
         try {
@@ -362,30 +365,21 @@ public class SQLiteConnection {
             statement = connection.createStatement();
             resultSet = statement.executeQuery(query);
 
-            HashMap<Integer, Float> itemRatingMap = new HashMap<>();
+            HashMap<Integer, Float> userRatingMap = new HashMap<>();
             int tempUser = 1;
             while(resultSet.next()) {
-                int currentID = resultSet.getInt(1);
+                int currentID = resultSet.getInt(2);
                 if (resultMap.containsKey(currentID)) {
-                    itemRatingMap = resultMap.get(currentID);
+                    userRatingMap = resultMap.get(currentID);
 
                 } else {
-                    itemRatingMap = new HashMap<>();
+                    userRatingMap = new HashMap<>();
 
 
 
                 }
-//                //if the user currently being looked at isn't the next one (row) in the training set
-//                if (tempUser != resultSet.getInt(1)) {
-//                    //If the user already has an item map don't make another itemMap for that user
-//                    if (!resultMap.containsKey(resultSet.getInt(1))) {
-//                        itemRatingMap = new HashMap<>();
-//                    }
-//                    tempUser = resultSet.getInt(1);
-//
-//                }
-                itemRatingMap.put(resultSet.getInt(2), resultSet.getFloat(3));
-                resultMap.put(resultSet.getInt(1), itemRatingMap);
+                userRatingMap.put(resultSet.getInt(1), resultSet.getFloat(3));
+                resultMap.put(resultSet.getInt(2), userRatingMap);
 
             }
         } catch (SQLException e) {

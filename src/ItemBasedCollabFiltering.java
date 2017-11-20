@@ -4,8 +4,8 @@ import java.util.HashMap;
 public class ItemBasedCollabFiltering {
 
     SQLiteConnection sql;
-    HashMap<Integer, Float> currentUserRating;
-    HashMap<Integer, Float> mapJ;
+    HashMap<Integer, Float> itemIUserMap;
+    HashMap<Integer, Float> itemJUserMap;
     public ItemBasedCollabFiltering(SQLiteConnection sql) {
         this.sql = sql;
         sql.connect();
@@ -44,40 +44,37 @@ public class ItemBasedCollabFiltering {
 
         }
 
+
         for (int i = start_i; i < map.entrySet().size() ; i++) {
 
-            //This is the items which user i has rated
-            currentUserRating = map.get(i);
+            //These are the users which have rated item i
+            itemIUserMap = map.get(i);
 
-            // Has the user rated some item(s)
-            if (currentUserRating.size() > 0) {
+            // Has the item been rated by any users
+            if (itemIUserMap.size() > 0) {
                 for (int j = start_j + 1; j <= map.entrySet().size(); j++) {
-
-//                    System.out.println("i " + i);
-//                    System.out.println("j " + j);
-
-                    //These are the items which user j has rated
-                    mapJ = map.get(j);
+                    //Users which have rated item j
+                    itemJUserMap = map.get(j);
 
                     float topLine = 0;
                     float userACalc = 0;
                     float userBCalc = 0;
-                    //There is a similarity between the 2 users (at least one item)
+                    //There is a similarity between the 2 items (at least one user has rated both)
                     boolean similarityExists = false;
-                    //Number of items which the users have both rated
-                    int similarItemsRated = 0;
+                    //Number of users which have rated both items
+                    int similarUsers = 0;
 
 
-                    for (int key : mapJ.keySet()) {
-                        if (currentUserRating.containsKey(key)) {
+                    for (int key : itemJUserMap.keySet()) {
+                        if (itemIUserMap.containsKey(key)) {
 
-                            similarItemsRated++;
+                            similarUsers++;
                             similarityExists = true;
 
-                            //The calculation which concerns the item which the user i has rated negated by their average
-                            float first = currentUserRating.get(key) - averagesMap.get(i);
-//                          //The calculation which concerns the item which the user j has rated negated by their average
-                            float second = mapJ.get(key) - averagesMap.get(j);
+                            //The calculation which concerns the the user's rating for item i, negated by their [the users] average
+                            float first = itemIUserMap.get(key) - averagesMap.get(i);
+//                          //The calculation which concerns the the user's rating for item j, negated by their [the users] average
+                            float second = itemJUserMap.get(key) - averagesMap.get(j);
 
                             topLine += (first * second);
                             userACalc += Math.pow(first, 2);
@@ -96,7 +93,7 @@ public class ItemBasedCollabFiltering {
                                 float similarity = (topLine / bottomLine);
                                 amountCalculated++;
                                 // Insert one value into the transaction block to insert
-                                sql.insertSimilarityMeasure(i, j, similarity, similarItemsRated);
+                                sql.insertSimilarityMeasure(i, j, similarity, similarUsers);
 
                             }
 
@@ -124,6 +121,87 @@ public class ItemBasedCollabFiltering {
 
         }
 
+
+    }
+
+    // Works out predicted rating for two users. map represents the predictedSet
+    public void calculatePredictedRating(HashMap<Integer,ArrayList<Integer>> map) {
+        long amountCalculated = 0;
+        //The number of items rated regardless if they have been rated by the same user (cold start problem)
+        long rowsProcessed = 0;
+        long numberOfRows = sql.getAmountOfRows(SQLiteConnection.PREDICTED_RATING_TABLE, "itemID");
+        // Training set which can be used to find the users which have rated the same item
+        HashMap<Integer,HashMap<Integer,Float>> trainingSet = sql.getTrainingSetToMemoryIBCF(SQLiteConnection.TRAINING_SET);
+
+        //Get averages in memory:
+        HashMap<Integer, Float> averagesMap = sql.getAveragesToMemory();
+
+        sql.startTransaction();
+
+        for (int item: map.keySet()) {
+            ArrayList<Integer> userList = map.get(item);
+            for (int user : userList) {
+                HashMap<Integer, Float> neighbourItemMap = sql.getNeighbourSelection(user, item);
+                float meanA = averagesMap.get(user);
+                float top = 0.0f;
+                float bottom = 0.0f;
+                boolean neighbourhoodItemValid = false;
+
+                //In the neighbourhood find the users which have rated both the items (item and itemNew)
+                for(HashMap.Entry<Integer, Float> entry : neighbourItemMap.entrySet()) {
+                    //Item which we're comparing the original item to
+                    int itemNew = entry.getKey();
+
+                    // Has the neighbourhood item been rated by the same user
+                    if (trainingSet.get(itemNew).containsKey(user)) {
+
+                        // Rating which the user has given itemNew
+                        float rating = trainingSet.get(itemNew).get(user);
+
+                        float similarity = entry.getValue();
+                        top += similarity * rating;
+//                        top += similarity * (sql.getNeighbourhoodRated(userNew, user) - sql.getUserAverage(userNew));
+                        bottom += similarity;
+                        neighbourhoodItemValid = true;
+
+                    }
+                }
+                rowsProcessed++;
+
+                if (neighbourhoodItemValid) {
+                    float rating = meanA + (top/bottom);
+                    sql.insertPredictedRating(user, item, rating);
+                    //Amount currently in the batch
+                    amountCalculated++;
+                } else {
+                    // If the item doesn't have any suitable neighbours then we simply insert the average value given by that user
+                    sql.insertPredictedRating(user, item, averagesMap.get(user));
+                }
+                if (amountCalculated % PREDICTION_BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
+                    sql.endTransaction();
+
+                    if (rowsProcessed != numberOfRows) {
+                        sql.startTransaction();
+                    }
+                }
+            }
+        }
+
+//        //TODO Needs to check if user has actually rated item, if so don't calculate
+//        HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);
+//        float meanA = sql.getUserAverage(user);
+//        float top = 0.0f;
+//        float bottom = 0.0f;
+//        for(HashMap.Entry<Integer, Float> entry : neighbourMap.entrySet()) {
+//            int userNew = entry.getKey();
+//            float similarity = entry.getValue();
+//            top += similarity * (sql.getNeighbourhoodRated(userNew, item) - sql.getUserAverage(userNew));
+//            bottom += similarity;
+//        }
+//        float rating = meanA + (top/bottom);
+////        System.out.println(meanA + (top/bottom));
+//        sql.insertPredictedRating(user, item, rating);
+//        sql.closeConnection();
 
     }
 

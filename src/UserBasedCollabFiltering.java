@@ -243,7 +243,9 @@ public class UserBasedCollabFiltering {
             ArrayList<Integer> itemList = map.get(user);
 //            HashMap<Integer, Float> itemMap = map.get(user);
             for (int item : itemList) {
-                HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);
+                HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user, item);
+                System.out.println(item);
+                System.out.println(neighbourMap);
                 float meanA = averagesMap.get(user);
                 float top = 0.0f;
                 float bottom = 0.0f;
