@@ -18,7 +18,7 @@ public class UserBasedCollabFiltering {
     //The size of the batches before inserting into the DB
     public static final int BATCH_SIZE = 50000;
 
-    public static final int PREDICTION_BATCH_SIZE = 1000;
+    public static final int PREDICTION_BATCH_SIZE = 10;
 
 
 
@@ -32,7 +32,7 @@ public class UserBasedCollabFiltering {
         int start_j = start_i;
 
         // Last record entered:
-        ArrayList<Integer> lastRecord = sql.getLastRecordFromSimilarityTable();
+        ArrayList<Integer> lastRecord = sql.getLastRecordFromSimilarityTable(sql.UBCF);
 
         //Get averages in memory:
         HashMap<Integer, Float> averagesMap = sql.getAveragesToMemory();

@@ -12,11 +12,17 @@ public class SQLiteConnection {
     // Stores similarity values for userA and userB
     public static final String SIMILARITY_TABLE = "similaritySet2";
 
+    public static final String SIMILARITY_TABLE_IBCF = "similaritySetIBCF";
+
     // TrainingSet or the table with the known ratings
     public static final String TRAINING_SET = "trainingSet";
 
     // Table to write the predictions to / with unknown ratings
     public static final String PREDICTED_RATING_TABLE = "predictionSet";
+
+    public static final String UBCF = "ubcf";
+
+    public static final String IBCF = "ibcf";
 
     public static final String DB_URL = "jdbc:sqlite:datasets.db";
 
@@ -69,9 +75,16 @@ public class SQLiteConnection {
         }
     }
 
-    public ArrayList<Integer> getLastRecordFromSimilarityTable() {
+    public ArrayList<Integer> getLastRecordFromSimilarityTable(String collab_filtering_type) {
 //        String query = "SELECT userA, userB FROM " + SIMILARITY_TABLE + " ORDER BY column DESC LIMIT 1";
+
         String query = "SELECT userA, userB FROM " + SIMILARITY_TABLE + " WHERE similarityValue IS NOT NULL ORDER BY userA DESC, userB DESC LIMIT 1";
+
+        if (collab_filtering_type == IBCF) {
+            query = "SELECT itemA, itemB FROM " + SIMILARITY_TABLE_IBCF + " WHERE similarityValue IS NOT NULL ORDER BY itemA DESC, itemB DESC LIMIT 1";
+        }
+
+
         ArrayList<Integer> record = new ArrayList<>();
 //        HashMap<Integer, Integer> record = new HashMap<>();
         try {
@@ -94,7 +107,7 @@ public class SQLiteConnection {
         PreparedStatement preparedStatementInsert = null;
 
         try {
-            String insert = "INSERT INTO " + SIMILARITY_TABLE + " VALUES (?,?,?,?)";
+            String insert = "INSERT INTO " + SIMILARITY_TABLE_IBCF + " VALUES (?,?,?,?)";
 
             preparedStatementInsert = connection.prepareStatement(insert);
 //            preparedStatementInsert.setString(1, SIMILARITY_TABLE);
@@ -117,7 +130,7 @@ public class SQLiteConnection {
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
 
-        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE (userA=" + userID + " AND userB IN (SELECT userID FROM " + TRAINING_SET + " WHERE itemID=" + itemID + ") OR userB=" + userID + " AND userA IN (SELECT userID FROM " + TRAINING_SET + " WHERE itemID=" + itemID + "))  AND similarityValue > 0 AND similarItemsAmount >= 1";
+        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE (userA=" + userID + " AND userB IN (SELECT userID FROM " + TRAINING_SET + " WHERE itemID=" + itemID + ") OR userB=" + userID + " AND userA IN (SELECT userID FROM " + TRAINING_SET + " WHERE itemID=" + itemID + "))  AND similarityValue > 0.95 AND similarItemsAmount > 10 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue)";
 //        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE " + userID + " IN (userA, userB) AND EXISTS (SELECT userID FROM " + TRAINING_SET + " WHERE userID IN (userA, userB) AND itemID=" + itemID + ") AND similarityValue > 0 and similarItemsAmount > 1";
 
 

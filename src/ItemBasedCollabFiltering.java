@@ -27,7 +27,7 @@ public class ItemBasedCollabFiltering {
         int start_j = start_i;
 
         // Last record entered:
-        ArrayList<Integer> lastRecord = sql.getLastRecordFromSimilarityTable();
+        ArrayList<Integer> lastRecord = sql.getLastRecordFromSimilarityTable(sql.IBCF);
 
         //Get averages in memory:
         HashMap<Integer, Float> averagesMap = sql.getAveragesToMemory();
