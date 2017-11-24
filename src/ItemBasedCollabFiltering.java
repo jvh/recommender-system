@@ -124,7 +124,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
 
     }
 
-    // Works out predicted rating for two users. map represents the predictedSet
+    // Works out predicted rating for a user and corresponding item.. map represents the predictedSet
     public void calculatePredictedRating(HashMap<Integer,ArrayList<Integer>> map) {
         long amountCalculated = 0;
         //The number of items rated regardless if they have been rated by the same user (cold start problem)
@@ -141,7 +141,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
         for (int item: map.keySet()) {
             ArrayList<Integer> userList = map.get(item);
             for (int user : userList) {
-                HashMap<Integer, Float> neighbourItemMap = sql.getNeighbourSelection(user, item);
+                HashMap<Integer, Float> neighbourItemMap = sql.getNeighbourSelectionItemBased(item, user);
                 float meanA = averagesMap.get(user);
                 float top = 0.0f;
                 float bottom = 0.0f;

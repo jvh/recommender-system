@@ -20,6 +20,9 @@ public class SQLiteConnection {
 //    // Table to write the predictions to / with unknown ratings
 //    public static final String PREDICTED_RATING_TABLE = "predictionSet";
 
+    //For slope one: stores the average differences between items
+//    public static final String AVERAGE_DIFFERENCE_SET = "differenceSet";
+
 
     //*********TESTING DATASETS********
     public static final String AVERAGE_TABLE = "averageSetSmall";
@@ -27,6 +30,7 @@ public class SQLiteConnection {
     public static final String SIMILARITY_TABLE_IBCF = "similaritySetSmall";
     public static final String TRAINING_SET = "TestSetSmallUnix";
     public static final String PREDICTED_RATING_TABLE = "predictionSmallSet";
+    public static final String AVERAGE_DIFFERENCE_SET = "smallDiffSet";
 
 
 
@@ -134,6 +138,27 @@ public class SQLiteConnection {
         }
     }
 
+    public void insertAverageDifferences(int item1, int item2, float difference, int numberOfSimilarUsers) {
+        PreparedStatement preparedStatementInsert = null;
+
+        try {
+            String insert = "INSERT INTO " + AVERAGE_DIFFERENCE_SET + " VALUES (?,?,?,?)";
+
+            preparedStatementInsert = connection.prepareStatement(insert);
+//            preparedStatementInsert.setString(1, SIMILARITY_TABLE);
+            preparedStatementInsert.setInt(1, item1);
+            preparedStatementInsert.setInt(2, item2);
+            preparedStatementInsert.setFloat(3, difference);
+            preparedStatementInsert.setInt(4, numberOfSimilarUsers);
+            preparedStatementInsert.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try { if (preparedStatementInsert != null) preparedStatementInsert.close(); } catch (Exception e) {};
+        }
+    }
+
     //Gets the neighbours for userA if user is in either column userA or column userB (it doesn't matter which one). The neighbours are selected based on if they have a similarity of at least 0.5 else they are not selected.
     public HashMap<Integer, Float> getNeighbourSelection(int userID, int itemID) {
         HashMap<Integer, Float> resultMap = new HashMap<>();
@@ -161,6 +186,41 @@ public class SQLiteConnection {
 
                 } else {
                     resultMap.put(userA, similarityValue);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return resultMap;
+    }
+
+    //Gets the neighbours for userA if user is in either column userA or column userB (it doesn't matter which one). The neighbours are selected based on if they have a similarity of at least 0.5 else they are not selected.
+    public HashMap<Integer, Float> getNeighbourSelectionItemBased(int itemID, int userID) {
+        HashMap<Integer, Float> resultMap = new HashMap<>();
+//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
+//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
+
+        String query = "SELECT itemA, itemB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE_IBCF + " WHERE (itemA=" + userID + " AND itemB IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ") OR itemB=" + itemID + " AND itemA IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + "))  AND similarityValue > 0.95 AND similarItemsAmount > 10 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue)";
+//        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE " + userID + " IN (userA, userB) AND EXISTS (SELECT userID FROM " + TRAINING_SET + " WHERE userID IN (userA, userB) AND itemID=" + itemID + ") AND similarityValue > 0 and similarItemsAmount > 1";
+
+
+        // REMOVE orderby -- perhaps
+        // Both treshold and the limitation (say up to 20) of users who have a postiive correlation of >0.5, if no users exist (or few) then use the average instead as this will liekly produce better predictions
+//        String query = "SELECT * FROM " + SIMILARITY_TABLE + " WHERE userA = " + userID + " OR userB = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
+//        String query2 = "SELECT userA, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE userB = " + userID + " OR userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 JOIN ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
+
+        try {
+            Statement queryStatement = connection.createStatement();
+            ResultSet resultSet = queryStatement.executeQuery(query);
+            while(resultSet.next()) {
+                int itemA = resultSet.getInt(1);
+                int itemB = resultSet.getInt(2);
+                float similarityValue = resultSet.getFloat(3);
+                if (itemA == itemID) {
+                    resultMap.put(itemB, similarityValue);
+                } else {
+                    resultMap.put(itemA, similarityValue);
                 }
             }
 
