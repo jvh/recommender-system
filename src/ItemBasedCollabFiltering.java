@@ -103,16 +103,16 @@ public class ItemBasedCollabFiltering {
                             //Regardless if there is a NaN exception this will execute and allow the transaction to end and it to be placed into the DB
                         } finally {
                             // Have 1000 items been calculated or has it reached the end of the table
-                            if (amountCalculated % BATCH_SIZE == 0 || (i == map.entrySet().size() - 1 && j == map.entrySet().size())) {
+                            if (amountCalculated % BATCH_SIZE == 0) {
                                 sql.endTransaction();
 
-                                // If it hasn't reached the end, start a new transaction
-                                if (!(i == map.entrySet().size() - 1 && j == map.entrySet().size())) {
-                                    sql.startTransaction();
-                                }
-
+                                //Start a new batch
+                                sql.startTransaction();
                             }
                         }
+                    }
+                    if((i == map.entrySet().size() - 1 && j == map.entrySet().size())) {
+                        sql.endTransaction();
                     }
                 }
 
