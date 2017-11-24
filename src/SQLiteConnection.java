@@ -20,6 +20,9 @@ public class SQLiteConnection {
 //    // Table to write the predictions to / with unknown ratings
 //    public static final String PREDICTED_RATING_TABLE = "predictionSet";
 
+    //For slope one: stores the average differences between items
+//    public static final String AVERAGE_DIFFERENCE_SET = "differenceSet";
+
 
     //*********TESTING DATASETS********
     public static final String AVERAGE_TABLE = "averageSetSmall";
@@ -27,6 +30,7 @@ public class SQLiteConnection {
     public static final String SIMILARITY_TABLE_IBCF = "similaritySetSmall";
     public static final String TRAINING_SET = "TestSetSmallUnix";
     public static final String PREDICTED_RATING_TABLE = "predictionSmallSet";
+    public static final String AVERAGE_DIFFERENCE_SET = "smallDiffSet";
 
 
 
@@ -125,6 +129,27 @@ public class SQLiteConnection {
             preparedStatementInsert.setInt(2, itemID);
             preparedStatementInsert.setFloat(3, similarity);
             preparedStatementInsert.setInt(4, amountRated);
+            preparedStatementInsert.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try { if (preparedStatementInsert != null) preparedStatementInsert.close(); } catch (Exception e) {};
+        }
+    }
+
+    public void insertAverageDifferences(int item1, int item2, float difference, int numberOfSimilarUsers) {
+        PreparedStatement preparedStatementInsert = null;
+
+        try {
+            String insert = "INSERT INTO " + AVERAGE_DIFFERENCE_SET + " VALUES (?,?,?,?)";
+
+            preparedStatementInsert = connection.prepareStatement(insert);
+//            preparedStatementInsert.setString(1, SIMILARITY_TABLE);
+            preparedStatementInsert.setInt(1, item1);
+            preparedStatementInsert.setInt(2, item2);
+            preparedStatementInsert.setFloat(3, difference);
+            preparedStatementInsert.setInt(4, numberOfSimilarUsers);
             preparedStatementInsert.executeUpdate();
 
         } catch (SQLException e) {
