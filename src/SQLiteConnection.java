@@ -338,9 +338,9 @@ public class SQLiteConnection {
         }
     }
 
-    public HashMap<Integer, ArrayList<Integer>> getPredictionSetToMemory(String tableName) {
+    public HashMap<Integer, HashMap<Integer, Float>> getPredictionSetToMemory(String tableName) {
 
-        HashMap<Integer, ArrayList<Integer>> resultMap = new HashMap<>();
+        HashMap<Integer, HashMap<Integer, Float>> resultMap = new HashMap<>();
         ResultSet resultSet = null;
         Statement statement = null;
 
@@ -350,20 +350,21 @@ public class SQLiteConnection {
             statement = connection.createStatement();
             resultSet = statement.executeQuery(query);
 
-            ArrayList<Integer> itemList = new ArrayList<>();
+            HashMap<Integer, Float> ratingMap = new HashMap<>();
 
             int tempUser = 1;
             while(resultSet.next()) {
                 int currentID = resultSet.getInt(1);
                 if (resultMap.containsKey(currentID)) {
-                    itemList = resultMap.get(currentID);
+                    ratingMap = resultMap.get(currentID);
 
                 } else {
-                    itemList = new ArrayList<>();
+                    ratingMap = new HashMap<Integer,Float>();
 
                 }
-                itemList.add(resultSet.getInt(2));
-                resultMap.put(resultSet.getInt(1), itemList);
+                ratingMap.put(resultSet.getInt(2), resultSet.getFloat(3));
+//                itemList.add(resultSet.getInt(2));
+                resultMap.put(resultSet.getInt(1), ratingMap);
 
             }
         } catch (SQLException e) {

@@ -4,7 +4,7 @@ import java.util.HashMap;
 /**
  * Implementation of the user-based collaborative filtering system given in the slides
  */
-public class UserBasedCollabFiltering {
+public class UserBasedCollabFiltering extends CollabFiltering {
 
     SQLiteConnection sql;
     HashMap<Integer, Float> currentUserRating;
@@ -227,7 +227,7 @@ public class UserBasedCollabFiltering {
 //    }
 
     // Works out predicted rating for two users. map represents the predictedSet
-    public void calculatePredictedRating(HashMap<Integer,ArrayList<Integer>> map) {
+    public void calculatePredictedRating(HashMap<Integer,HashMap<Integer,Float>> map) {
         long amountCalculated = 0;
         //The amount of users which have been processed regardless if they have/haven't got any shared item similarities (cold start problem)
         long rowsProcessed = 0;
@@ -241,9 +241,11 @@ public class UserBasedCollabFiltering {
         sql.startTransaction();
 
         for (int user: map.keySet()) {
-            ArrayList<Integer> itemList = map.get(user);
+            HashMap<Integer, Float> itemMap = map.get(user);
+//            ArrayList<Integer> itemList = map.get(user);
 //            HashMap<Integer, Float> itemMap = map.get(user);
-            for (int item : itemList) {
+            for (int item: itemMap.keySet()) {
+//            for (int item : itemList) {
                 HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user, item);
                 System.out.println(item);
                 System.out.println(neighbourMap);

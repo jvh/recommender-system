@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ItemBasedCollabFiltering {
+public class ItemBasedCollabFiltering extends CollabFiltering {
 
     SQLiteConnection sql;
     HashMap<Integer, Float> itemIUserMap;
