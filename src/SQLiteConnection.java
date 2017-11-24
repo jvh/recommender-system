@@ -170,6 +170,41 @@ public class SQLiteConnection {
         return resultMap;
     }
 
+    //Gets the neighbours for userA if user is in either column userA or column userB (it doesn't matter which one). The neighbours are selected based on if they have a similarity of at least 0.5 else they are not selected.
+    public HashMap<Integer, Float> getNeighbourSelectionItemBased(int itemID, int userID) {
+        HashMap<Integer, Float> resultMap = new HashMap<>();
+//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
+//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
+
+        String query = "SELECT itemA, itemB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE_IBCF + " WHERE (itemA=" + userID + " AND itemB IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ") OR itemB=" + itemID + " AND itemA IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + "))  AND similarityValue > 0.95 AND similarItemsAmount > 10 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue)";
+//        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE " + userID + " IN (userA, userB) AND EXISTS (SELECT userID FROM " + TRAINING_SET + " WHERE userID IN (userA, userB) AND itemID=" + itemID + ") AND similarityValue > 0 and similarItemsAmount > 1";
+
+
+        // REMOVE orderby -- perhaps
+        // Both treshold and the limitation (say up to 20) of users who have a postiive correlation of >0.5, if no users exist (or few) then use the average instead as this will liekly produce better predictions
+//        String query = "SELECT * FROM " + SIMILARITY_TABLE + " WHERE userA = " + userID + " OR userB = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
+//        String query2 = "SELECT userA, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE userB = " + userID + " OR userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 JOIN ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
+
+        try {
+            Statement queryStatement = connection.createStatement();
+            ResultSet resultSet = queryStatement.executeQuery(query);
+            while(resultSet.next()) {
+                int itemA = resultSet.getInt(1);
+                int itemB = resultSet.getInt(2);
+                float similarityValue = resultSet.getFloat(3);
+                if (itemA == itemID) {
+                    resultMap.put(itemB, similarityValue);
+                } else {
+                    resultMap.put(itemA, similarityValue);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return resultMap;
+    }
+
     public void insertPredictedRating(int userID, int itemID, float rating) {
 
         PreparedStatement preparedStatementUpdate = null;
