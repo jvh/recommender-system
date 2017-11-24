@@ -13,7 +13,7 @@ public class CollabFiltering {
             HashMap<Integer, Float> realValues = realValueSet.get(key1);
             for (Integer key2 : realValues.keySet()) {
                 Float realValue = realValueSet.get(key1).get(key2);
-                Float predictedValue = predictedValueSet.get(key1)
+                Float predictedValue = predictedValueSet.get(key1).get(key2);
                 squareError += Math.pow(predictedValue - realValue, 2);
                 count++; // This is the value of n in the equation
             }
