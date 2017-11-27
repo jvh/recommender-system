@@ -72,9 +72,10 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                             similarityExists = true;
 
                             //The calculation which concerns the the user's rating for item i, negated by their [the users] average
-                            float first = itemIUserMap.get(key) - averagesMap.get(i);
+                            float first = itemIUserMap.get(key) - averagesMap.get(key);
+
 //                          //The calculation which concerns the the user's rating for item j, negated by their [the users] average
-                            float second = itemJUserMap.get(key) - averagesMap.get(j);
+                            float second = itemJUserMap.get(key) - averagesMap.get(key);
 
                             topLine += (first * second);
                             userACalc += Math.pow(first, 2);

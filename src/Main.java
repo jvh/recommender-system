@@ -19,7 +19,7 @@ public class Main {
 //        ubcf.calculatePredictedRating(sql.getPredictionSetToMemory(SQLiteConnection.PREDICTED_RATING_TABLE));
 
         //Calculate mean square error:
-        ibcf.calculateMeanSquareError(sql.getTrainingSetToMemoryIBCF(sql.TRAINING_SET), sql.getPredictionSetToMemory(sql.PREDICTED_RATING_TABLE));
+//        ibcf.calculateMeanSquareError(sql.getTrainingSetToMemoryIBCF(sql.TRAINING_SET), sql.getPredictionSetToMemory(sql.PREDICTED_RATING_TABLE));
 
         sql.closeConnection();
     }

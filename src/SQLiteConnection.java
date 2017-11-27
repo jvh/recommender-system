@@ -6,31 +6,31 @@ public class SQLiteConnection {
 
     public Connection connection = null;
 
-//    // tableTo: Averages go to this new table
-//    public static final String AVERAGE_TABLE = "averageSet1";
-//
-//    // Stores similarity values for userA and userB
-//    public static final String SIMILARITY_TABLE = "similaritySet2";
-//
-//    public static final String SIMILARITY_TABLE_IBCF = "similaritySetIBCF";
-//
-//    // TrainingSet or the table with the known ratings
-//    public static final String TRAINING_SET = "trainingSet";
-//
-//    // Table to write the predictions to / with unknown ratings
-//    public static final String PREDICTED_RATING_TABLE = "predictionSet";
+    // tableTo: Averages go to this new table
+    public static final String AVERAGE_TABLE = "averageSet1";
+
+    // Stores similarity values for userA and userB
+    public static final String SIMILARITY_TABLE = "similaritySet2";
+
+    public static final String SIMILARITY_TABLE_IBCF = "testSimTable";
+
+    // TrainingSet or the table with the known ratings
+    public static final String TRAINING_SET = "trainingSet";
+
+    // Table to write the predictions to / with unknown ratings
+    public static final String PREDICTED_RATING_TABLE = "predictionSet";
 
     //For slope one: stores the average differences between items
-//    public static final String AVERAGE_DIFFERENCE_SET = "differenceSet";
+    public static final String AVERAGE_DIFFERENCE_SET = "differenceSet";
 
 
     //*********TESTING DATASETS********
-    public static final String AVERAGE_TABLE = "averageSetSmall";
-    public static final String SIMILARITY_TABLE = "similaritySetSmall";
-    public static final String SIMILARITY_TABLE_IBCF = "similaritySetSmall";
-    public static final String TRAINING_SET = "TestSetSmallUnix";
-    public static final String PREDICTED_RATING_TABLE = "predictionSmallSet";
-    public static final String AVERAGE_DIFFERENCE_SET = "smallDiffSet";
+//    public static final String AVERAGE_TABLE = "averageSetSmall";
+//    public static final String SIMILARITY_TABLE = "similaritySetSmall";
+//    public static final String SIMILARITY_TABLE_IBCF = "similaritySetSmall";
+//    public static final String TRAINING_SET = "TestSetSmallUnix";
+//    public static final String PREDICTED_RATING_TABLE = "predictionSmallSet";
+//    public static final String AVERAGE_DIFFERENCE_SET = "smallDiffSet";
 
 
 
