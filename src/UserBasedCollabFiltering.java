@@ -229,6 +229,7 @@ public class UserBasedCollabFiltering extends CollabFiltering {
     // Works out predicted rating for two users. map represents the predictedSet
     public void calculatePredictedRating(HashMap<Integer,HashMap<Integer,Float>> map) {
         long amountCalculated = 0;
+
         //The amount of users which have been processed regardless if they have/haven't got any shared item similarities (cold start problem)
         long rowsProcessed = 0;
         long numberOfRows = sql.getAmountOfRows(SQLiteConnection.PREDICTED_RATING_TABLE, "userID");
@@ -281,10 +282,10 @@ public class UserBasedCollabFiltering extends CollabFiltering {
                 } else {
                     // If the user doesn't have any suitable neighbours then we simply insert the average value given by that user
                     sql.insertPredictedRating(user, item, averagesMap.get(user));
+                    amountCalculated++;
                 }
                 if (amountCalculated % PREDICTION_BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
                     sql.endTransaction();
-                    System.out.println("Batch finished");
 
                     if (rowsProcessed != numberOfRows) {
                         sql.startTransaction();

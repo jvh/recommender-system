@@ -7,18 +7,18 @@ public class SQLiteConnection {
     public Connection connection = null;
 
     // tableTo: Averages go to this new table
-    public static final String AVERAGE_TABLE = "averageSet1";
+    public static final String AVERAGE_TABLE = "averageSet";
 
     // Stores similarity values for userA and userB
     public static final String SIMILARITY_TABLE = "similaritySet2";
 
-    public static final String SIMILARITY_TABLE_IBCF = "testSimTable";
+    public static final String SIMILARITY_TABLE_IBCF = "similaritySetIBCF";
 
     // TrainingSet or the table with the known ratings
     public static final String TRAINING_SET = "trainingSet";
 
     // Table to write the predictions to / with unknown ratings
-    public static final String PREDICTED_RATING_TABLE = "predictionSet";
+    public static final String PREDICTED_RATING_TABLE = "testPredictionSet";
 
     //For slope one: stores the average differences between items
     public static final String AVERAGE_DIFFERENCE_SET = "differenceSet";
@@ -38,7 +38,7 @@ public class SQLiteConnection {
 
     public static final String IBCF = "ibcf";
 
-    public static final String DB_URL = "jdbc:sqlite:datasets.db";
+    public static final String DB_URL = "jdbc:sqlite:datasetsRecommenderSystem.db";
 
     public void connect() {
 
@@ -201,7 +201,7 @@ public class SQLiteConnection {
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
 
-        String query = "SELECT itemA, itemB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE_IBCF + " WHERE (itemA=" + userID + " AND itemB IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ") OR itemB=" + itemID + " AND itemA IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + "))  AND similarityValue > 0.95 AND similarItemsAmount > 10";
+        String query = "SELECT itemA, itemB, similarityValue, similarUsersAmount FROM " + SIMILARITY_TABLE_IBCF + " WHERE (itemA=" + userID + " AND itemB IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ") OR itemB=" + itemID + " AND itemA IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + "))  AND similarityValue > 0.85 AND similarUsersAmount > 5";
 //        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE " + userID + " IN (userA, userB) AND EXISTS (SELECT userID FROM " + TRAINING_SET + " WHERE userID IN (userA, userB) AND itemID=" + itemID + ") AND similarityValue > 0 and similarItemsAmount > 1";
 
 
@@ -406,7 +406,7 @@ public class SQLiteConnection {
 
         try {
 
-            String query = "SELECT userID, itemID, realRating FROM " + tableName;
+            String query = "SELECT itemID, userID, rating FROM " + tableName;
             statement = connection.createStatement();
             resultSet = statement.executeQuery(query);
 

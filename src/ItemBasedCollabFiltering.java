@@ -15,7 +15,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
     //The size of the batches before inserting into the DB
     public static final int BATCH_SIZE = 50000;
 
-    public static final int PREDICTION_BATCH_SIZE = 1000;
+    public static final int PREDICTION_BATCH_SIZE = 10000;
 
     public void calculateSimilarity(HashMap<Integer,HashMap<Integer,Float>> map) {
         //Keeps count of the amount of similarities which have been successfully calculated
@@ -128,6 +128,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
     // Works out predicted rating for a user and corresponding item.. map represents the predictedSet
     public void calculatePredictedRating(HashMap<Integer, HashMap<Integer, Float>> map) {
         long amountCalculated = 0;
+        int batch = 1;
         //The number of items rated regardless if they have been rated by the same user (cold start problem)
         long rowsProcessed = 0;
         long numberOfRows = sql.getAmountOfRows(SQLiteConnection.PREDICTED_RATING_TABLE, "itemID");
@@ -171,19 +172,25 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
 
                 if (neighbourhoodItemValid) {
                     float rating = (top/bottom);
+                    if(rating > 10) {
+                        rating = 10; // Avoid float accuracy issues
+                    }
                     sql.insertPredictedRating(user, item, rating);
                     //Amount currently in the batch
                     amountCalculated++;
                 } else {
                     // If the item doesn't have any suitable neighbours then we simply insert the average value given by that user
                     sql.insertPredictedRating(user, item, averagesMap.get(user));
+                    amountCalculated++;
                 }
 
                 if (amountCalculated % PREDICTION_BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
                     sql.endTransaction();
+                    System.out.println("Batch: " + batch + " finished");
 
                     if (rowsProcessed != numberOfRows) {
                         sql.startTransaction();
+                        batch++;
                     }
                 }
             }
