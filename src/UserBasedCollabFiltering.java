@@ -247,8 +247,8 @@ public class UserBasedCollabFiltering extends CollabFiltering {
             for (int item: itemMap.keySet()) {
 //            for (int item : itemList) {
                 HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user, item);
-                System.out.println(item);
-                System.out.println(neighbourMap);
+//                System.out.println(item);
+//                System.out.println(neighbourMap);
                 float meanA = averagesMap.get(user);
                 float top = 0.0f;
                 float bottom = 0.0f;
@@ -284,6 +284,7 @@ public class UserBasedCollabFiltering extends CollabFiltering {
                 }
                 if (amountCalculated % PREDICTION_BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
                     sql.endTransaction();
+                    System.out.println("Batch finished");
 
                     if (rowsProcessed != numberOfRows) {
                         sql.startTransaction();

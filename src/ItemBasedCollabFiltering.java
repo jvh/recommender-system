@@ -126,7 +126,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
     }
 
     // Works out predicted rating for a user and corresponding item.. map represents the predictedSet
-    public void calculatePredictedRating(HashMap<Integer,ArrayList<Integer>> map) {
+    public void calculatePredictedRating(HashMap<Integer, HashMap<Integer, Float>> map) {
         long amountCalculated = 0;
         //The number of items rated regardless if they have been rated by the same user (cold start problem)
         long rowsProcessed = 0;
@@ -140,10 +140,9 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
         sql.startTransaction();
 
         for (int item: map.keySet()) {
-            ArrayList<Integer> userList = map.get(item);
-            for (int user : userList) {
+            HashMap<Integer, Float> userList = map.get(item);
+            for (int user : userList.keySet()) {
                 HashMap<Integer, Float> neighbourItemMap = sql.getNeighbourSelectionItemBased(item, user);
-                float meanA = averagesMap.get(user);
                 float top = 0.0f;
                 float bottom = 0.0f;
                 boolean neighbourhoodItemValid = false;
@@ -152,12 +151,13 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                 for(HashMap.Entry<Integer, Float> entry : neighbourItemMap.entrySet()) {
                     //Item which we're comparing the original item to
                     int itemNew = entry.getKey();
+                    HashMap<Integer, Float> userNewItemRatings = trainingSet.get(itemNew);
 
                     // Has the neighbourhood item been rated by the same user
-                    if (trainingSet.get(itemNew).containsKey(user)) {
+                    if (userNewItemRatings.containsKey(user)) {
 
                         // Rating which the user has given itemNew
-                        float rating = trainingSet.get(itemNew).get(user);
+                        float rating = userNewItemRatings.get(user);
 
                         float similarity = entry.getValue();
                         top += similarity * rating;
@@ -170,7 +170,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                 rowsProcessed++;
 
                 if (neighbourhoodItemValid) {
-                    float rating = meanA + (top/bottom);
+                    float rating = (top/bottom);
                     sql.insertPredictedRating(user, item, rating);
                     //Amount currently in the batch
                     amountCalculated++;
@@ -178,6 +178,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                     // If the item doesn't have any suitable neighbours then we simply insert the average value given by that user
                     sql.insertPredictedRating(user, item, averagesMap.get(user));
                 }
+
                 if (amountCalculated % PREDICTION_BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
                     sql.endTransaction();
 
