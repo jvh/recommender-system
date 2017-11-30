@@ -15,9 +15,11 @@ public class Main {
 
         //STEP 3: Computes the predicted ratings for the users given the similarities
         ibcf.calculatePredictedRating(sql.getPredictionSetToMemory(SQLiteConnection.PREDICTED_RATING_TABLE));
+//        ubcf.calculatePredictedRating(sql.getPredictionSetToMemory(SQLiteConnection.PREDICTED_RATING_TABLE));
 
         //Calculate mean square error:
          System.out.println(ibcf.calculateMeanSquareError(sql.getTrainingSetToMemoryIBCF(sql.TRAINING_SET), sql.getPredictionSetToMemory(sql.PREDICTED_RATING_TABLE)));
+//        System.out.println(ubcf.calculateMeanSquareError(sql.getTrainingSetToMemory(sql.TRAINING_SET), sql.getPredictionSetToMemory(sql.PREDICTED_RATING_TABLE)));
 
         sql.closeConnection();
     }

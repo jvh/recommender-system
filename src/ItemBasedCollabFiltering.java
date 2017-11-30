@@ -17,6 +17,10 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
 
     public static final int PREDICTION_BATCH_SIZE = 1000;
 
+    //How much leniency should be given to the alternative to averages (in predictions)
+    public static final double PREDICTIONS_LENIENCY = 1;
+
+
     public void calculateSimilarity(HashMap<Integer,HashMap<Integer,Float>> map) {
         //Keeps count of the amount of similarities which have been successfully calculated
         int amountCalculated = 0;
@@ -183,6 +187,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
 
                     } else if (rating < 1) {
                         rating = 1;
+
                     }
 
 //                    } else if (decimalPart <= 0.3) {
@@ -196,19 +201,29 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                     //Amount currently in the batch
                     amountCalculated++;
                 } else {
-                    int totalRating = 0;
-                    int count = 0;
-                    //Get the average rating given to the item by all users
-                    for(float rating: trainingSet.get(item).values()) {
-                        count++;
-                        totalRating += rating;
-                    }
+//                    int totalRating = 0;
+//                    int count = 0;
+//                    //Get the average rating given to the item by all users
+//                    for(float rating: trainingSet.get(item).values()) {
+//                        count++;
+//                        totalRating += rating;
+//                    }
 
-                    float rating = totalRating/count;
-                    sql.insertPredictedRating(user, item, rating);
+                    //****TESTING****
+//                    float actualRating = trainingSet.get(item).get(user);
+
+//                    float rating = (float) totalRating/count;
+                    float averageRating = averagesMap.get(user);
+
+//                    //If the rating is above the leniency given, just input the average rating
+//                    if(Math.abs(rating-averageRating) >= PREDICTIONS_LENIENCY) {
+//                        sql.insertPredictedRating(user, item, averageRating);
+//                    } else {
+//                        sql.insertPredictedRating(user, item, rating);
+//                    }
 
                     // If the item doesn't have any suitable neighbours then we simply insert the average value given by that user
-//                    sql.insertPredictedRating(user, item, averagesMap.get(user));
+                    sql.insertPredictedRating(user, item, averageRating);
                     amountCalculated++;
                     averageCount++;
                 }
