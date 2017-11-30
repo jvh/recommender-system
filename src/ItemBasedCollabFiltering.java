@@ -196,8 +196,19 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                     //Amount currently in the batch
                     amountCalculated++;
                 } else {
+                    int totalRating = 0;
+                    int count = 0;
+                    //Get the average rating given to the item by all users
+                    for(float rating: trainingSet.get(item).values()) {
+                        count++;
+                        totalRating += rating;
+                    }
+
+                    float rating = totalRating/count;
+                    sql.insertPredictedRating(user, item, rating);
+
                     // If the item doesn't have any suitable neighbours then we simply insert the average value given by that user
-                    sql.insertPredictedRating(user, item, averagesMap.get(user));
+//                    sql.insertPredictedRating(user, item, averagesMap.get(user));
                     amountCalculated++;
                     averageCount++;
                 }
