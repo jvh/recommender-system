@@ -1,6 +1,4 @@
-/**
- * Created by jh47g15 on 18/10/17.
- */
+
 public class Main {
 
     public static void main(String[] args) {
@@ -19,7 +17,7 @@ public class Main {
         ibcf.calculatePredictedRating(sql.getPredictionSetToMemory(SQLiteConnection.PREDICTED_RATING_TABLE));
 
         //Calculate mean square error:
-//        System.out.println(ibcf.calculateMeanSquareError(sql.getTrainingSetToMemoryIBCF(sql.TRAINING_SET), sql.getPredictionSetToMemory(sql.PREDICTED_RATING_TABLE)));
+         System.out.println(ibcf.calculateMeanSquareError(sql.getTrainingSetToMemoryIBCF(sql.TRAINING_SET), sql.getPredictionSetToMemory(sql.PREDICTED_RATING_TABLE)));
 
         sql.closeConnection();
     }

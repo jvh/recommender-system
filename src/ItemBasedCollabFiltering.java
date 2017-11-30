@@ -15,7 +15,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
     //The size of the batches before inserting into the DB
     public static final int BATCH_SIZE = 50000;
 
-    public static final int PREDICTION_BATCH_SIZE = 10000;
+    public static final int PREDICTION_BATCH_SIZE = 1000;
 
     public void calculateSimilarity(HashMap<Integer,HashMap<Integer,Float>> map) {
         //Keeps count of the amount of similarities which have been successfully calculated
@@ -139,6 +139,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
         HashMap<Integer, Float> averagesMap = sql.getAveragesToMemory();
 
         sql.startTransaction();
+        int averageCount = 0;
 
         for (int item: map.keySet()) {
             HashMap<Integer, Float> userList = map.get(item);
@@ -154,6 +155,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                     int itemNew = entry.getKey();
                     HashMap<Integer, Float> userNewItemRatings = trainingSet.get(itemNew);
 
+
                     // Has the neighbourhood item been rated by the same user
                     if (userNewItemRatings.containsKey(user)) {
 
@@ -166,15 +168,30 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                         bottom += similarity;
                         neighbourhoodItemValid = true;
 
+                    } else {
+                        System.out.println("don't");
                     }
                 }
                 rowsProcessed++;
 
-                if (neighbourhoodItemValid) {
+                if (neighbourhoodItemValid && neighbourItemMap.entrySet().size() >= 1) {
                     float rating = (top/bottom);
+                    float decimalPart = rating % 1;
+//                    System.out.println("rating: " + rating + " user: " + user + " item: " + item);
                     if(rating > 10) {
                         rating = 10; // Avoid float accuracy issues
+
+                    } else if (rating < 1) {
+                        rating = 1;
                     }
+
+//                    } else if (decimalPart <= 0.3) {
+//                        rating = Math.round(rating);
+//
+//                    } else if (decimalPart >= 0.7) {
+//                        rating = Math.round(rating);
+//                    }
+//                    System.out.println("rating: " + rating + " user: " + user + " item: " + item);
                     sql.insertPredictedRating(user, item, rating);
                     //Amount currently in the batch
                     amountCalculated++;
@@ -182,6 +199,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                     // If the item doesn't have any suitable neighbours then we simply insert the average value given by that user
                     sql.insertPredictedRating(user, item, averagesMap.get(user));
                     amountCalculated++;
+                    averageCount++;
                 }
 
                 if (amountCalculated % PREDICTION_BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
@@ -195,6 +213,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                 }
             }
         }
+        System.out.println("Averages: " + averageCount);
 
 //        //TODO Needs to check if user has actually rated item, if so don't calculate
 //        HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);

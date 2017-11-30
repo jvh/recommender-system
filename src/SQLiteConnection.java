@@ -18,7 +18,7 @@ public class SQLiteConnection {
     public static final String TRAINING_SET = "trainingSet";
 
     // Table to write the predictions to / with unknown ratings
-    public static final String PREDICTED_RATING_TABLE = "testPredictionSet";
+    public static final String PREDICTED_RATING_TABLE = "testPredictionSetSmall";
 
     //For slope one: stores the average differences between items
     public static final String AVERAGE_DIFFERENCE_SET = "differenceSet";
@@ -88,7 +88,6 @@ public class SQLiteConnection {
             e.printStackTrace();
         }
     }
-
     public ArrayList<Integer> getLastRecordFromSimilarityTable(String collab_filtering_type) {
 //        String query = "SELECT userA, userB FROM " + SIMILARITY_TABLE + " ORDER BY column DESC LIMIT 1";
 
@@ -201,7 +200,7 @@ public class SQLiteConnection {
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
 //        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
 
-        String query = "SELECT itemA, itemB, similarityValue, similarUsersAmount FROM " + SIMILARITY_TABLE_IBCF + " WHERE (itemA=" + userID + " AND itemB IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ") OR itemB=" + itemID + " AND itemA IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + "))  AND similarityValue > 0.85 AND similarUsersAmount > 5";
+        String query = "SELECT itemA, itemB, similarityValue, similarUsersAmount FROM " + SIMILARITY_TABLE_IBCF + " WHERE (itemA=" + itemID + " AND itemB IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ") OR itemB=" + itemID + " AND itemA IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ")) AND similarityValue >= 0.75 AND similarUsersAmount >= 1";
 //        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE " + userID + " IN (userA, userB) AND EXISTS (SELECT userID FROM " + TRAINING_SET + " WHERE userID IN (userA, userB) AND itemID=" + itemID + ") AND similarityValue > 0 and similarItemsAmount > 1";
 
 
