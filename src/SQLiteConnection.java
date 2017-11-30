@@ -264,6 +264,24 @@ public class SQLiteConnection {
         return result;
     }
 
+    //Gets the average rating given to the item by all users
+    public Double getItemAverageRating(int itemID) {
+        String query = "SELECT rating FROM " + TRAINING_SET + " WHERE itemID = " + itemID;
+        double result = 0;
+        int count = 0
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            while(resultSet.next()) {
+                result += resultSet.getDouble(1);
+                count++;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return (result/count);
+    }
+
     public HashMap<Integer, String> similarityValues(int userA, int userB) {
         HashMap<Integer, String> resultMap = new HashMap<>();
         ResultSet resultSet = null;
