@@ -15,7 +15,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
     //The size of the batches before inserting into the DB
     public static final int BATCH_SIZE = 50000;
 
-    public static final int PREDICTION_BATCH_SIZE = 10000;
+    public static final int PREDICTION_BATCH_SIZE = 10;
 
     public void calculateSimilarity(HashMap<Integer,HashMap<Integer,Float>> map) {
         //Keeps count of the amount of similarities which have been successfully calculated
@@ -187,7 +187,11 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                         totalRating += rating;
                     }
 
-                    float rating = totalRating/count;
+                    //****TESTING****
+                    float averageRating = averagesMap.get(user);
+                    float actualRating = trainingSet.get(item).get(user);
+
+                    float rating = (float) totalRating/count;
                     sql.insertPredictedRating(user, item, rating);
 
                     // If the item doesn't have any suitable neighbours then we simply insert the average value given by that user
