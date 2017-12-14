@@ -15,7 +15,7 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
     //The size of the batches before inserting into the DB
     public static final int BATCH_SIZE = 50000;
 
-    public static final int PREDICTION_BATCH_SIZE = 1000;
+    public static final int PREDICTION_BATCH_SIZE = 100;
 
     //How much leniency should be given to the alternative to averages (in predictions)
     public static final double PREDICTIONS_LENIENCY = 1;

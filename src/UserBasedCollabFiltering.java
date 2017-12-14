@@ -230,7 +230,7 @@ public class UserBasedCollabFiltering extends CollabFiltering {
     public void calculatePredictedRating(HashMap<Integer,HashMap<Integer,Float>> map) {
         long amountCalculated = 0;
         int batch = 1;
-
+        int averageCount = 0;
         //The amount of users which have been processed regardless if they have/haven't got any shared item similarities (cold start problem)
         long rowsProcessed = 0;
         long numberOfRows = sql.getAmountOfRows(SQLiteConnection.PREDICTED_RATING_TABLE, "userID");
@@ -292,6 +292,7 @@ public class UserBasedCollabFiltering extends CollabFiltering {
                     // If the user doesn't have any suitable neighbours then we simply insert the average value given by that user
                     sql.insertPredictedRating(user, item, averagesMap.get(user));
                     amountCalculated++;
+                    averageCount++;
                 }
                 if (amountCalculated % PREDICTION_BATCH_SIZE == 0 || (rowsProcessed == numberOfRows)) {
                     sql.endTransaction();
@@ -303,6 +304,8 @@ public class UserBasedCollabFiltering extends CollabFiltering {
                 }
             }
         }
+
+        System.out.println("Averages: " + averageCount);
 
 //        //TODO Needs to check if user has actually rated item, if so don't calculate
 //        HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);
