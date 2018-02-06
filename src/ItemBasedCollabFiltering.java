@@ -103,8 +103,6 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                             }
 
                         } catch (NumberFormatException e) {
-//                            System.err.println("user A: " + i + " user B: " + j + " has encountered a NaN exception");
-
                             //Regardless if there is a NaN exception this will execute and allow the transaction to end and it to be placed into the DB
                         } finally {
                             // Have 1000 items been calculated or has it reached the end of the table
@@ -168,7 +166,6 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
 
                         float similarity = entry.getValue();
                         top += similarity * rating;
-//                        top += similarity * (sql.getNeighbourhoodRated(userNew, user) - sql.getUserAverage(userNew));
                         bottom += similarity;
                         neighbourhoodItemValid = true;
 
@@ -181,7 +178,6 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                 if (neighbourhoodItemValid && neighbourItemMap.entrySet().size() >= 1) {
                     float rating = (top/bottom);
                     float decimalPart = rating % 1;
-//                    System.out.println("rating: " + rating + " user: " + user + " item: " + item);
                     if(rating > 10) {
                         rating = 10; // Avoid float accuracy issues
 
@@ -189,39 +185,12 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
                         rating = 1;
 
                     }
-
-//                    } else if (decimalPart <= 0.3) {
-//                        rating = Math.round(rating);
-//
-//                    } else if (decimalPart >= 0.7) {
-//                        rating = Math.round(rating);
-//                    }
-//                    System.out.println("rating: " + rating + " user: " + user + " item: " + item);
                     sql.insertPredictedRating(user, item, rating);
                     //Amount currently in the batch
                     amountCalculated++;
                 } else {
-//                    int totalRating = 0;
-//                    int count = 0;
-//                    //Get the average rating given to the item by all users
-//                    for(float rating: trainingSet.get(item).values()) {
-//                        count++;
-//                        totalRating += rating;
-//                    }
-
-                    //****TESTING****
-//                    float actualRating = trainingSet.get(item).get(user);
-
-//                    float rating = (float) totalRating/count;
                     float averageRating = averagesMap.get(user);
-
-//                    //If the rating is above the leniency given, just input the average rating
-//                    if(Math.abs(rating-averageRating) >= PREDICTIONS_LENIENCY) {
-//                        sql.insertPredictedRating(user, item, averageRating);
-//                    } else {
-//                        sql.insertPredictedRating(user, item, rating);
-//                    }
-
+                    
                     // If the item doesn't have any suitable neighbours then we simply insert the average value given by that user
                     sql.insertPredictedRating(user, item, averageRating);
                     amountCalculated++;
@@ -240,23 +209,6 @@ public class ItemBasedCollabFiltering extends CollabFiltering {
             }
         }
         System.out.println("Averages: " + averageCount);
-
-//        //TODO Needs to check if user has actually rated item, if so don't calculate
-//        HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);
-//        float meanA = sql.getUserAverage(user);
-//        float top = 0.0f;
-//        float bottom = 0.0f;
-//        for(HashMap.Entry<Integer, Float> entry : neighbourMap.entrySet()) {
-//            int userNew = entry.getKey();
-//            float similarity = entry.getValue();
-//            top += similarity * (sql.getNeighbourhoodRated(userNew, item) - sql.getUserAverage(userNew));
-//            bottom += similarity;
-//        }
-//        float rating = meanA + (top/bottom);
-////        System.out.println(meanA + (top/bottom));
-//        sql.insertPredictedRating(user, item, rating);
-//        sql.closeConnection();
-
     }
 
 }
