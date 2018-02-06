@@ -3,6 +3,7 @@ import java.util.HashMap;
 
 public class CollabFiltering {
 
+    //Calculates the mean squared error of the predicted data and the true values
     public Double calculateMeanSquareError(HashMap<Integer, HashMap<Integer, Float>> realValueSet, HashMap<Integer, HashMap<Integer, Float>> predictedValueSet) {
         int count = 0;
         float squareError = 0.0f;
@@ -20,6 +21,4 @@ public class CollabFiltering {
         double rootMeanSquareError = squareError/count;
         return rootMeanSquareError;
     }
-
-
 }
