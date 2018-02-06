@@ -1,9 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/**
- * Created by
- */
 public class SlopeOne {
 
     SQLiteConnection sql;
