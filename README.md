@@ -1,3 +1,8 @@
-COMP3208 - Social Computing Techniques  
-Diogo Fernandes - 27752763  
-Jonathan Harper - 28228235  
+# Recommender System  
+
+Developing a collaborative filtering system to predict unseen ratings based on relevant neighbours.
+Note: this was done as part of a University group assignment.
+
+## Developers (surname alphabetical order)  
+Diogo Fernandes  
+Jonathan Harper  
