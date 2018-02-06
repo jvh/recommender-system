@@ -57,10 +57,6 @@ public class UserBasedCollabFiltering extends CollabFiltering {
             // Has the user rated some item(s)
             if (currentUserRating.size() > 0) {
                 for (int j = start_j + 1; j <= map.entrySet().size(); j++) {
-
-//                    System.out.println("i " + i);
-//                    System.out.println("j " + j);
-
                     //These are the items which user j has rated
                     mapJ = map.get(j);
 
@@ -81,7 +77,7 @@ public class UserBasedCollabFiltering extends CollabFiltering {
 
                             //The calculation which concerns the item which the user i has rated negated by their average
                             float first = currentUserRating.get(key) - averagesMap.get(i);
-//                          //The calculation which concerns the item which the user j has rated negated by their average
+                            //The calculation which concerns the item which the user j has rated negated by their average
                             float second = mapJ.get(key) - averagesMap.get(j);
 
                             topLine += (first * second);
@@ -106,7 +102,6 @@ public class UserBasedCollabFiltering extends CollabFiltering {
                             }
 
                         } catch (NumberFormatException e) {
-//                            System.err.println("user A: " + i + " user B: " + j + " has encountered a NaN exception");
 
                             //Regardless if there is a NaN exception this will execute and allow the transaction to end and it to be placed into the DB
                         } finally {
@@ -133,98 +128,6 @@ public class UserBasedCollabFiltering extends CollabFiltering {
 
     }
 
-//    //Works out the similarities between the users
-//    public void similarityMeasure() {
-//        sql.connect();
-//
-//        //Stores the average for both of the users
-//        double userAAverage;
-//        double userBAverage;
-//        //The capacity being the size of the batches
-//        HashMap<String, Double> similaritiesToAdd = new HashMap<String, Double>(BATCH_SIZE);
-//
-//        //Maximum number of iterations to create the similarity matrix
-//        final int MAX_ITERATIONS = sql.getAmountOfRows("testSet1");
-//
-//        //Stores the items rated by 2 users.
-//        HashMap<Integer, String> similarItemsRated;
-//
-//
-//        for (int i = 1; i < MAX_ITERATIONS; i++) {
-//            userAAverage = sql.getUserAverage(i);
-//            for (int y = 1; y < MAX_ITERATIONS; y++) {
-//                userBAverage = sql.getUserAverage(y);
-//
-//                //As to not produce duplicates in the similarity ratings table or to create similarities for the same users, i.e. i = 1, y = 1
-//                if (i <= y) {
-//                    //TODO This is selecting a value from the database each time, issue?
-//                    //Finds the items which both users have rated and the rating associated with them for both users.
-//                    similarItemsRated = sql.similarityValues(i, y);
-//                    //Finds the items which both users have rated and the rating associated with them for both users. Returns a hashmap
-////                    similarItemsRated = sql.similarityValues(i, y);
-////                    HashMap<Integer, String> similarItemsRated = new HashMap<Integer, String>();
-//
-//
-//                    double topLine = 0;
-//                    double userACalc = 0;
-//                    double userBCalc = 0;
-//                    double similarity = 0;
-//
-//                    if (similarItemsRated.entrySet().size() > 1) {
-//                        for (HashMap.Entry<Integer, String> entry : similarItemsRated.entrySet()) {
-//                            //Ratings returned for both users for the same item
-//                            double ratingA = Double.parseDouble(entry.getValue().split(",")[0]);
-//                            double ratingB = Double.parseDouble(entry.getValue().split(",")[1]);
-//
-//                            double first = ratingA - userAAverage;
-//                            double second = ratingB - userBAverage;
-//
-//                            topLine += (first * second);
-//                            userACalc += Math.pow(first, 2);
-//                            userBCalc += Math.pow(second, 2);
-//                        }
-//                        double bottomLine = Math.sqrt(userACalc) * Math.sqrt(userBCalc);
-//
-//                        similarity = (topLine / bottomLine);
-//
-//                        //Add to the similarities table only if we have not reached the end of the users
-//                        if (i <= MAX_ITERATIONS && y <= MAX_ITERATIONS && !Double.isNaN(similarity)) {
-//                            similaritiesToAdd.put(i + "," + y + "," + similarItemsRated.size(), similarity);
-//                            similarItemsRated.clear();
-//                        }
-//
-//                        if (similaritiesToAdd.size() % 1000 == 0 || (i == MAX_ITERATIONS & y == MAX_ITERATIONS)){
-//                            System.out.println("Starting batch");
-//                            for (HashMap.Entry<String, Double> entry : similaritiesToAdd.entrySet()) {
-//                                int userA = Integer.parseInt(entry.getKey().split(",")[0]);
-//                                int userB = Integer.parseInt(entry.getKey().split(",")[1]);
-//                                int similarItems = Integer.parseInt(entry.getKey().split(",")[2]);
-//                                double similarityRating = entry.getValue();
-//
-////                            System.out.println(userA + ", userB: " + userB + " y: " + y + ", similarity: " + similarity + ", similarItem: " + similarItems);
-//
-//                                sql.insertSimilarityValue(userA, userB, similarityRating, similarItems);
-//                            }
-//                            similaritiesToAdd.clear();
-//                            System.out.println("DONE BATCH");
-////                        if(i < MAX_ITERATIONS && y < MAX_ITERATIONS) {
-////                            System.out.println("*********************DONE STACK*************************");
-//////                            similarityMeasure(i, y);
-////                        } else {
-////                            System.out.println("FINISHED");
-////                            return;
-////                        }
-//                        }
-//
-//                    }
-////                    System.out.println("i= " + i + " y= " + y);
-//                    //Batch processing (insertion)
-//
-//
-//                }
-//            }
-//        }
-//    }
 
     // Works out predicted rating for two users. map represents the predictedSet
     public void calculatePredictedRating(HashMap<Integer,HashMap<Integer,Float>> map) {
@@ -244,13 +147,8 @@ public class UserBasedCollabFiltering extends CollabFiltering {
 
         for (int user: map.keySet()) {
             HashMap<Integer, Float> itemMap = map.get(user);
-//            ArrayList<Integer> itemList = map.get(user);
-//            HashMap<Integer, Float> itemMap = map.get(user);
             for (int item: itemMap.keySet()) {
-//            for (int item : itemList) {
                 HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user, item);
-//                System.out.println(item);
-//                System.out.println(neighbourMap);
                 float meanA = averagesMap.get(user);
                 float top = 0.0f;
                 float bottom = 0.0f;
@@ -267,7 +165,6 @@ public class UserBasedCollabFiltering extends CollabFiltering {
 
                         float similarity = entry.getValue();
                         top += similarity * (rating - averagesMap.get(userNew));
-//                        top += similarity * (sql.getNeighbourhoodRated(userNew, user) - sql.getUserAverage(userNew));
                         bottom += similarity;
                         neighbourhoodItemValid = true;
 
@@ -306,22 +203,6 @@ public class UserBasedCollabFiltering extends CollabFiltering {
         }
 
         System.out.println("Averages: " + averageCount);
-
-//        //TODO Needs to check if user has actually rated item, if so don't calculate
-//        HashMap<Integer, Float> neighbourMap = sql.getNeighbourSelection(user);
-//        float meanA = sql.getUserAverage(user);
-//        float top = 0.0f;
-//        float bottom = 0.0f;
-//        for(HashMap.Entry<Integer, Float> entry : neighbourMap.entrySet()) {
-//            int userNew = entry.getKey();
-//            float similarity = entry.getValue();
-//            top += similarity * (sql.getNeighbourhoodRated(userNew, item) - sql.getUserAverage(userNew));
-//            bottom += similarity;
-//        }
-//        float rating = meanA + (top/bottom);
-////        System.out.println(meanA + (top/bottom));
-//        sql.insertPredictedRating(user, item, rating);
-//        sql.closeConnection();
 
     }
 
