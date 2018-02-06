@@ -39,7 +39,6 @@ public class SQLiteConnection {
     public static final String IBCF = "ibcf";
 
     public static final String DB_URL = "jdbc:sqlite:datasets.db";
-//    public static final String DB_URL = "jdbc:sqlite:/Volumes/Seagate Backup Plus Drive/Dataset UBCF/datasetsRecommenderSystem.db";
 
     public void connect() {
 
@@ -90,8 +89,6 @@ public class SQLiteConnection {
         }
     }
     public ArrayList<Integer> getLastRecordFromSimilarityTable(String collab_filtering_type) {
-//        String query = "SELECT userA, userB FROM " + SIMILARITY_TABLE + " ORDER BY column DESC LIMIT 1";
-
         String query = "SELECT userA, userB FROM " + SIMILARITY_TABLE + " WHERE similarityValue IS NOT NULL ORDER BY userA DESC, userB DESC LIMIT 1";
 
         if (collab_filtering_type == IBCF) {
@@ -100,15 +97,12 @@ public class SQLiteConnection {
 
 
         ArrayList<Integer> record = new ArrayList<>();
-//        HashMap<Integer, Integer> record = new HashMap<>();
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
             while(resultSet.next()) {
                 record.add(0, resultSet.getInt(1));
                 record.add(1, resultSet.getInt(2));
-//                record.put(resultSet.getInt(1), resultSet.getInt(2));
-//                count = resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -124,7 +118,6 @@ public class SQLiteConnection {
             String insert = "INSERT INTO " + SIMILARITY_TABLE_IBCF + " VALUES (?,?,?,?)";
 
             preparedStatementInsert = connection.prepareStatement(insert);
-//            preparedStatementInsert.setString(1, SIMILARITY_TABLE);
             preparedStatementInsert.setInt(1, userID);
             preparedStatementInsert.setInt(2, itemID);
             preparedStatementInsert.setFloat(3, similarity);
@@ -145,7 +138,6 @@ public class SQLiteConnection {
             String insert = "INSERT INTO " + AVERAGE_DIFFERENCE_SET + " VALUES (?,?,?,?)";
 
             preparedStatementInsert = connection.prepareStatement(insert);
-//            preparedStatementInsert.setString(1, SIMILARITY_TABLE);
             preparedStatementInsert.setInt(1, item1);
             preparedStatementInsert.setInt(2, item2);
             preparedStatementInsert.setFloat(3, difference);
@@ -162,17 +154,7 @@ public class SQLiteConnection {
     //Gets the neighbours for userA if user is in either column userA or column userB (it doesn't matter which one). The neighbours are selected based on if they have a similarity of at least 0.5 else they are not selected.
     public HashMap<Integer, Float> getNeighbourSelection(int userID, int itemID) {
         HashMap<Integer, Float> resultMap = new HashMap<>();
-//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
-//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
-
         String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE (userA=" + userID + " AND userB IN (SELECT userID FROM " + TRAINING_SET + " WHERE itemID=" + itemID + ") OR userB=" + userID + " AND userA IN (SELECT userID FROM " + TRAINING_SET + " WHERE itemID=" + itemID + "))  AND similarityValue >= 0.5 AND similarItemsAmount >= 1 ORDER BY (.03 * similarItemsAmount) + (.97 * similarityValue) DESC LIMIT 400";
-//        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE " + userID + " IN (userA, userB) AND EXISTS (SELECT userID FROM " + TRAINING_SET + " WHERE userID IN (userA, userB) AND itemID=" + itemID + ") AND similarityValue > 0 and similarItemsAmount > 1";
-
-
-        // REMOVE orderby -- perhaps
-        // Both treshold and the limitation (say up to 20) of users who have a postiive correlation of >0.5, if no users exist (or few) then use the average instead as this will liekly produce better predictions
-//        String query = "SELECT * FROM " + SIMILARITY_TABLE + " WHERE userA = " + userID + " OR userB = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
-//        String query2 = "SELECT userA, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE userB = " + userID + " OR userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 JOIN ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
 
         try {
             Statement queryStatement = connection.createStatement();
@@ -198,17 +180,8 @@ public class SQLiteConnection {
     //Gets the neighbours for userA if user is in either column userA or column userB (it doesn't matter which one). The neighbours are selected based on if they have a similarity of at least 0.5 else they are not selected.
     public HashMap<Integer, Float> getNeighbourSelectionItemBased(int itemID, int userID) {
         HashMap<Integer, Float> resultMap = new HashMap<>();
-//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarityValue DESC LIMIT 20";
-//        String query = "SELECT userB, similarityValue, similarItemsAmount FROM similaritySet WHERE userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 2 ORDER BY similarItemsAmount DESC, similarityValue DESC LIMIT 20";
 
         String query = "SELECT itemA, itemB, similarityValue, similarUsersAmount FROM " + SIMILARITY_TABLE_IBCF + " WHERE (itemA=" + itemID + " AND itemB IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ") OR itemB=" + itemID + " AND itemA IN (SELECT itemID FROM " + TRAINING_SET + " WHERE userID=" + userID + ")) AND similarityValue >= 0.5 AND similarUsersAmount >= 1 ORDER BY (.03 * similarUsersAmount) + (.97 * similarityValue) DESC LIMIT 400";
-//        String query = "SELECT userA, userB, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE " + userID + " IN (userA, userB) AND EXISTS (SELECT userID FROM " + TRAINING_SET + " WHERE userID IN (userA, userB) AND itemID=" + itemID + ") AND similarityValue > 0 and similarItemsAmount > 1";
-
-
-        // REMOVE orderby -- perhaps
-        // Both treshold and the limitation (say up to 20) of users who have a postiive correlation of >0.5, if no users exist (or few) then use the average instead as this will liekly produce better predictions
-//        String query = "SELECT * FROM " + SIMILARITY_TABLE + " WHERE userA = " + userID + " OR userB = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
-//        String query2 = "SELECT userA, similarityValue, similarItemsAmount FROM " + SIMILARITY_TABLE + " WHERE userB = " + userID + " OR userA = " + userID + " AND similarityValue > 0 AND similarItemsAmount >= 1 JOIN ORDER BY (.05 * similarItemsAmount) + (.95 * similarityValue) DESC LIMIT 20";
 
         try {
             Statement queryStatement = connection.createStatement();
@@ -236,7 +209,6 @@ public class SQLiteConnection {
         try {
             String update = "UPDATE " + PREDICTED_RATING_TABLE + " SET rating =? WHERE userID = ? AND itemID = ?";
 
-//            String insert = "INSERT INTO " + TRAINING_SET + " (userID, itemID, predictedRating) VALUES (?,?,?)";
 
             preparedStatementUpdate = connection.prepareStatement(update);
             preparedStatementUpdate.setFloat(1, rating);
@@ -289,16 +261,11 @@ public class SQLiteConnection {
         try {
 
             String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID ASC";
-//             String query = "SELECT t1.* FROM testSet1 AS t1 JOIN (SELECT itemID, realRating FROM testSet1 WHERE userID in (" + userA + "," + userB + ") GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID IN (" + userA + "," + userB + ") ORDER BY itemID ASC";
-// String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID ORDER BY userID";
-//            String query = "SELECT t1.* FROM trainingSet AS t1 JOIN (SELECT itemID, realRating FROM trainingSet WHERE userID BETWEEN 1 AND 1000 GROUP BY itemID HAVING ( COUNT(itemID) > 1)) AS t2 ON t1.itemID = t2.itemID WHERE userID BETWEEN 1 AND 1000 ORDER BY userID";
 
             Statement statement = connection.createStatement();
             resultSet = statement.executeQuery(query);
 
             while(resultSet.next()) {
-//                System.out.println(resultSet.getInt(1));
-//                System.out.println(resultSet.getInt(1) + " " + resultSet.getInt(2) + " " + resultSet.getInt(3));
                 int itemID = resultSet.getInt(2);
                 if(!resultMap.containsKey(itemID)) {
                     double valueA = resultSet.getInt(3);
@@ -331,7 +298,7 @@ public class SQLiteConnection {
                 resultCount++;
                 empty = false;
             }
-//
+
             if(empty) {
                 String queryOther = "SELECT rating FROM " + TRAINING_SET + " WHERE userID=" + userID + " AND userID <> 0";
                 Statement statementOther = connection.createStatement();
@@ -346,7 +313,7 @@ public class SQLiteConnection {
                 insertStatement.executeUpdate(insert);
 
             }
-//            System.out.println(average);
+
             return average;
 
         } catch (SQLException e) {
@@ -378,15 +345,11 @@ public class SQLiteConnection {
 
 
             preparedStatementInsert = connection.prepareStatement(insert);
-//            preparedStatementInsert.setString(1, SIMILARITY_TABLE);
+
             preparedStatementInsert.setInt(1, userID);
             preparedStatementInsert.setFloat(2, average);
             preparedStatementInsert.executeUpdate();
 
-
-//            String insert = "INSERT INTO " + TABLE_TO_AVERAGE + " VALUES (" + userID + "," + average + ")";
-//            Statement insertStatement = connection.createStatement();
-//            insertStatement.executeUpdate(insert);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -441,7 +404,6 @@ public class SQLiteConnection {
 
                 }
                 ratingMap.put(resultSet.getInt(2), resultSet.getFloat(3));
-//                itemList.add(resultSet.getInt(2));
                 resultMap.put(resultSet.getInt(1), ratingMap);
 
             }
@@ -521,15 +483,6 @@ public class SQLiteConnection {
 
 
                 }
-//                //if the user currently being looked at isn't the next one (row) in the training set
-//                if (tempUser != resultSet.getInt(1)) {
-//                    //If the user already has an item map don't make another itemMap for that user
-//                    if (!resultMap.containsKey(resultSet.getInt(1))) {
-//                        itemRatingMap = new HashMap<>();
-//                    }
-//                    tempUser = resultSet.getInt(1);
-//
-//                }
                 itemRatingMap.put(resultSet.getInt(2), resultSet.getFloat(3));
                 resultMap.put(resultSet.getInt(1), itemRatingMap);
 
@@ -579,38 +532,6 @@ public class SQLiteConnection {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    public static void main(String[] args) {
-        SQLiteConnection sqLiteConnection = new SQLiteConnection();
-        sqLiteConnection.connect();
-//        HashMap<Integer, HashMap<Integer, Double>> resultMap = sqLiteConnection.getTrainingSetToMemory("trainingSet");
-//        for (int i = 1; i < resultMap.entrySet().size() && i < 100; i++ ) {
-//            System.out.println(i + "," + resultMap.get(i));
-//        System.out.println(resultMap.get)
-//        }
-
-//        sqLiteConnection.getNeighbourhoodRated(1,62440);
-//        sqLiteConnection.getAmountOfRows("trainingSet");
-//        System.out.println(sqLiteConnection.similarityValues(49, 97));
-//        sqLiteConnection.insertPredictedRating(1, 62440, 6.2, "testSet1");
-//        sqLiteConnection.createTestDatabase("testSet1", 10000);
-//        sqLiteConnection.getAmountOfRows("testSet1");
-//        sqLiteConnection.getUserAverage(2);
-//        sqLiteConnection.getUserAverage("averageSet", 1);
-//        sqLiteConnection.getNeighbourSelection(1);
-//        System.out.println(sqLiteConnection.similarityValues(1, 16));
-//        sqLiteConnection.insertSimilarityValue(1,2, 343.432);
-//        sqLiteConnection.intersectTest();
-
-//        sqLiteConnection.getAmountOfRecords("trainingSet", 100);
-//        System.out.println(sqLiteConnection.getAmountOfRecords("trainingSet", 100));
-//        System.out.println(sqLiteConnection.getUserAverage("trainingSet", 1));
-//        )sqLiteConnection.getUserId("trainingSet", 1);
-//        sqLiteConnection.closeConnection();
-//        connect();
-//        getAmountOfRecords("minimalTestSet", 15);
-//        closeConnection();
     }
 
 }
